@@ -13,7 +13,7 @@ initCommon();
 const root = document.getElementById('report')!;
 // sample.html: 결제 후 화면을 보여주는 고정 예시 (가상의 보호자와 개)
 const SAMPLE = document.body.hasAttribute('data-sample');
-const SAMPLE_HASH = 'o=%EB%AF%BC%EC%A7%80&b=19930821&t=0920&c=s&g=f&n=%EC%BD%A9%EC%9D%B4&f=poodle&fc=brown&a=20200411&r=shop&s=&db=';
+const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%EA%B9%80%EC%9C%A8&f=poodle&fc=brown&a=202111&r=shop&s=&db=';
 const hash = SAMPLE ? SAMPLE_HASH : location.hash.slice(1);
 const inp = decodeInputs(hash);
 
@@ -24,7 +24,7 @@ if (!inp) {
   const m = buildModel(inp);
   const unlocked = SAMPLE || isUnlocked();
   const { head, body, toc } = renderReport(m, unlocked);
-  const bar = SAMPLE ? `<div class="sample-bar"><div><b>예시 리포트</b><span>결제하면 이렇게 끝까지 다 나와요. 아래는 가상의 보호자 민지님과 콩이 예시예요.</span></div><a class="btn" href="./#form">내 걸로 보기</a></div>` : '';
+  const bar = SAMPLE ? `<div class="sample-bar"><div><b>예시 리포트</b><span>결제하면 이렇게 끝까지 다 나와요. 아래는 김예빈님과 김율 예시예요.</span></div><a class="btn" href="./#form">내 걸로 보기</a></div>` : '';
   root.innerHTML = bar + head + body + `<div class="disclaimer"><p>계산: 만세력(진태양시 −${m.chart.correctionMin}분 보정${m.chart.corrected ? '' : ', 시각 미상'}), 대운수 ${m.chart.daeunStartAge}. 생각 버릇 점수는 내 사주 비중을 무작위 생년월일 2만 개랑 비교해서 몇 등쯤인지 본 거예요.</p><p>재미로, 나를 좀 더 알아보는 용도로 봐 주세요. 심리 진단은 아니에요.</p></div>`;
   document.title = SAMPLE ? '예시 리포트 · 보호자사주' : `${inp.dog} · ${inp.owner || '보호자'}의 대운 리포트 · 보호자사주`;
   document.querySelector('[data-no]')!.textContent = `No.${m.reportNo}`;
