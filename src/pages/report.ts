@@ -26,7 +26,7 @@ if (!inp) {
   const { head, body, toc } = renderReport(m, unlocked);
   const bar = SAMPLE ? `<div class="sample-bar"><div><b>예시 리포트</b><span>결제하면 이렇게 끝까지 다 나와요. 아래는 가상의 보호자 민지님과 콩이 예시예요.</span></div><a class="btn" href="./#form">내 걸로 보기</a></div>` : '';
   root.innerHTML = bar + head + body + `<div class="disclaimer"><p>계산: 만세력(진태양시 −${m.chart.correctionMin}분 보정${m.chart.corrected ? '' : ', 시각 미상'}), 대운수 ${m.chart.daeunStartAge}. 생각 버릇 점수는 내 사주 비중을 무작위 생년월일 2만 개랑 비교해서 몇 등쯤인지 본 거예요.</p><p>재미로, 나를 좀 더 알아보는 용도로 봐 주세요. 심리 진단은 아니에요.</p></div>`;
-  document.title = SAMPLE ? '예시 리포트 · 견주사주' : `${inp.dog} · ${inp.owner || '보호자'}의 대운 리포트 · 견주사주`;
+  document.title = SAMPLE ? '예시 리포트 · 보호자사주' : `${inp.dog} · ${inp.owner || '보호자'}의 대운 리포트 · 보호자사주`;
   document.querySelector('[data-no]')!.textContent = `No.${m.reportNo}`;
   document.querySelector('[data-toc]')!.innerHTML = toc.map((t) => `<a href="#${t.id}" class="${t.locked ? 'lk' : ''}"><span class="mono">${t.no}</span>${esc(t.t)}</a>`).join('');
   const b = inp.birth;
@@ -36,7 +36,7 @@ if (!inp) {
     ['시각', b.hh === null ? '모름' : `${String(b.hh).padStart(2, '0')}:${String(b.mm ?? 0).padStart(2, '0')}`],
     ['개', inp.dog],
     ['견종', breedName(inp.breed, inp.color)],
-    ['입양', `${inp.adopt.y}.${inp.adopt.m}${inp.adopt.d ? '.' + inp.adopt.d : ''}`],
+    [inp.dateKind === 'birth' ? '생일' : '온 날', `${inp.adopt.y}.${inp.adopt.m}${inp.adopt.d ? '.' + inp.adopt.d : ''}`],
     ['경로', ROUTE_KO[inp.route] ?? '-'],
   ].map(([k, v]) => `<li><span class="mono">${k}</span>${esc(v)}</li>`).join('');
 
@@ -85,7 +85,7 @@ function wireShare(m: Model, paid: boolean) {
     const mono = (s: number) => `400 ${s}px NanumSquareNeo, sans-serif`;
     const sp = (t: string, px: number) => { (x as any).letterSpacing = `${px}px`; return t; };
     x.fillStyle = mute; x.font = mono(22); sp('', 0);
-    x.fillText(`견주사주 · REPORT No.${m.reportNo}`, P, 108);
+    x.fillText(`보호자사주 · REPORT No.${m.reportNo}`, P, 108);
     x.textAlign = 'right'; x.fillText(`${m.inp.adopt.y}.${String(m.inp.adopt.m).padStart(2, '0')} → D+${m.adoption.dPlus.toLocaleString()}`, W - P, 108); x.textAlign = 'left';
     x.beginPath(); x.moveTo(P, 132); x.lineTo(W - P, 132); x.strokeStyle = ink; x.lineWidth = 2; x.stroke();
     // 그림
@@ -127,7 +127,7 @@ function wireShare(m: Model, paid: boolean) {
       x.fillStyle = mute; x.font = mono(20); x.textAlign = 'right'; x.fillText('내 생각 버릇 1위', W - P, 1164);
       x.fillStyle = ink; x.font = sans(800, 44); sp('', -3); x.fillText(d.name, W - P, 1222); x.textAlign = 'left';
     } else {
-      x.fillStyle = mute; x.font = mono(20); x.textAlign = 'right'; x.fillText('견주사주', W - P, 1222); x.textAlign = 'left';
+      x.fillStyle = mute; x.font = mono(20); x.textAlign = 'right'; x.fillText('보호자사주', W - P, 1222); x.textAlign = 'left';
     }
     void C;
   };
@@ -137,7 +137,7 @@ function wireShare(m: Model, paid: boolean) {
     cv.toBlob((b) => {
       if (!b) return;
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(b); a.download = `견주사주-${m.inp.dog}.png`; a.click();
+      a.href = URL.createObjectURL(b); a.download = `보호자사주-${m.inp.dog}.png`; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }, 'image/png');
   });

@@ -68,3 +68,9 @@
 .ul-msg { margin-top: 12px; min-height: 20px; font-size: 13px; }
 .ul-msg.ok { color: var(--el-wood); } .ul-msg.no { color: var(--accent-ink); }
 @media (max-width: 480px) { .ul-form { grid-template-columns: 1fr; } }
+
+.two-sel { grid-template-columns: 1fr 1fr; column-gap: 6px; }
+.two-sel > label { display: grid; gap: 6px; }
+.two-sel > label > span { font-size: 13px; font-weight: 700; }
+.two-sel .sel-note { grid-column: 1 / -1; }
+.two-sel select:disabled { opacity: .5; }

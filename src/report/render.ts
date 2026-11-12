@@ -61,6 +61,8 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
   const nth = du ? `${du.idx}번째 대운` : '첫 대운도 오기 전';
   const nowK = m.daeunNow ? m.nowYear - m.daeunNow.startYear + 1 : 0;
   const prim = ADOPT[ad.primary];
+  const BD = inp.dateKind === 'birth';
+  const cameT = BD ? `${josa(dog, '이', '가')} 태어난 때` : `${josa(dog, '이', '가')} 온 때`;
   const adoptLabel = `${inp.adopt.y}.${String(inp.adopt.m).padStart(2, '0')}${inp.adopt.d ? '.' + String(inp.adopt.d).padStart(2, '0') : ''}`;
   const top = m.dist.slice(0, 3);
   const toc: { id: string; no: string; t: string; locked: boolean }[] = [];
@@ -81,7 +83,7 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
     <p class="cover-kick">${esc(ownerN)} 사주 위에 ${esc(dog)} 얹어 봄 <span class="mono">· ${esc(breedName(inp.breed, inp.color))}</span></p>
     <h1 class="cover-title">${esc(josa(dog, '은', '는'))}<br>${esc(ownerN)}의 <em>${nth}</em>에 왔다</h1>
     <div class="cover-facts">
-      <div><span class="mono">입양</span><b>${adoptLabel}</b></div>
+      <div><span class="mono">${BD ? '생일' : '우리 집 온 날'}</span><b>${adoptLabel}</b></div>
       <div><span class="mono">그해</span><b>${pillarHanja(ad.pillars.year)}년 ${pillarHanja(ad.pillars.month)}월</b></div>
       <div><span class="mono">${du ? '대운' : '나이'}</span><b>${du ? `${pillarHanja(du.pillar)} ${ad.daeunYear}년 차` : `${inp.adopt.y - chart.solar.y}세`}</b></div>
       <div><span class="mono">${esc(dog)} 기둥</span><b>${pillarHanja(m.dogPillar)}</b></div>
@@ -127,10 +129,10 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
   const avg = (xs: { v: number }[]) => (xs.length ? Math.round(xs.reduce((s, p) => s + p.v, 0) / xs.length) : 0);
   body += `<section class="sec">${sec('s-flow', '02', '10년씩 끊어 본 인생', `대운수 ${chart.daeunStartAge} · ${chart.daeunForward ? '순행' : '역행'}`)}
     <div class="stats">
-      <div><span class="mono">${esc(josa(dog, '이', '가'))} 온 때</span><b>${du ? `${du.idx}대운 ${ad.daeunYear}년 차` : '대운 전'}</b><small>${adoptLabel}</small></div>
+      <div><span class="mono">${esc(cameT)}</span><b>${du ? `${du.idx}대운 ${ad.daeunYear}년 차` : '대운 전'}</b><small>${adoptLabel}</small></div>
       <div><span class="mono">지금</span><b>${m.daeunNow ? `${m.daeunNow.idx}대운 ${nowK}년 차` : '-'}</b><small>${m.daeunNow ? pillarHanja(m.daeunNow.pillar) + ' ' + pillarKo(m.daeunNow.pillar) : ''}</small></div>
       <div><span class="mono">다음 대운</span><b>${m.daeunNext ? `${m.daeunNext.startYear}년` : '-'}</b><small>${m.daeunNext ? `${m.daeunNext.startAge}세 · ${pillarHanja(m.daeunNext.pillar)}` : ''}</small></div>
-      <div><span class="mono">오기 전 3년 → 온 뒤 3년</span><b>${avg(adPrev)} → ${avg(adNext)}</b><small>운 점수 평균</small></div>
+      <div><span class="mono">${BD ? '태어나기 전 3년 → 후 3년' : '오기 전 3년 → 온 뒤 3년'}</span><b>${avg(adPrev)} → ${avg(adNext)}</b><small>운 점수 평균</small></div>
     </div>
     ${timelineChart(m.timeline, chart.daeun, m.daeunScores, m.nowYear, inp.adopt.y, `${dog} ${inp.adopt.y}`)}
     <div class="scroll-x"><table class="tbl dtable">
@@ -143,11 +145,12 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
   </section>`;
 
   // ---------- 03 입양 타이밍
-  T('s-when', '03', `${josa(dog, '이', '가')} 온 때`);
+  T('s-when', '03', cameT);
   const maxV = Math.max(...ad.ranked.map((r) => r.v), 1);
   const relY = [];
   if (ad.daeunTurn) relY.push('대운 교체기');
-  body += `<section class="sec">${sec('s-when', '03', `${esc(josa(dog, '이', '가'))} 온 때`, ROUTE_KO[inp.route] ?? '')}
+  body += `<section class="sec">${sec('s-when', '03', esc(cameT), ROUTE_KO[inp.route] ?? '')}
+    ${BD ? `<p class="mono mute fine" style="margin:0 0 10px">생일 기준으로 계산했어요. 분양이면 실제로 만난 건 보통 몇 달 뒤라, 그해 전체 흐름으로 읽어 주세요.</p>` : ''}
     <div class="evid mono">
       <span>${adoptLabel}</span>
       <span>세운 ${pillarHanja(ad.pillars.year)} · ${TG_KO[ad.yearTg]}</span>
@@ -157,7 +160,7 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
     </div>
     ${ad.primary === 'rescue'
       ? `<p class="when-lead"><span class="mute">그해 ${esc(owner + '한테')} 온 건</span><br><b>${prim.title}</b>${hasBatchim(prim.title) ? '이었어요' : '였어요'}.</p>`
-      : `<p class="when-lead"><span class="mute">${esc(josa(dog, '이', '가'))} 오던 해, ${esc(owner === '당신' ? '당신' : inp.owner + '님')}은</span><br><b>${prim.title}</b>${hasBatchim(prim.title) ? '이었을' : '였을'} 거예요.</p>`}
+      : `<p class="when-lead"><span class="mute">${esc(josa(dog, '이', '가'))} ${BD ? '태어난' : '오던'} 해, ${esc(owner === '당신' ? '당신' : inp.owner + '님')}은</span><br><b>${prim.title}</b>${hasBatchim(prim.title) ? '이었을' : '였을'} 거예요.</p>`}
     <div class="when-grid">
       <div>
         <h3 class="sub">솔직히 몇 개 해당돼요? <span class="mono mute" data-count>0 / ${prim.checks.length}</span></h3>
@@ -234,6 +237,7 @@ function shareBlock(m: Model, paid: boolean) {
 
 function renderPaid(m: Model): string {
   const { inp, chart, a } = m;
+  const BD = inp.dateKind === 'birth';
   const dog = inp.dog;
   let h = '';
 
@@ -242,7 +246,7 @@ function renderPaid(m: Model): string {
   const dEls = [STEM_EL[m.dogPillar.s], BRANCH_EL[m.dogPillar.b]];
   h += `<section class="sec">${sec('s-after', '04', `${josa(dog, '이', '가')} 오고 나서 바뀐 것`, '내 8글자 + 입양일 2글자')}
     <div class="dogp">
-      <div class="dp-c"><span class="mono">${esc(dog)}의 기둥</span><b class="hz big">${pillarHanja(m.dogPillar)}</b><small>${pillarKo(m.dogPillar)} · ${inp.adopt.d ? '입양일 일주' : '입양월 월주'}</small></div>
+      <div class="dp-c"><span class="mono">${esc(dog)}의 기둥</span><b class="hz big">${pillarHanja(m.dogPillar)}</b><small>${pillarKo(m.dogPillar)} · ${BD ? (inp.adopt.d ? '생일 일주' : '생일 달 월주') : inp.adopt.d ? '온 날 일주' : '온 달 월주'}</small></div>
       <div class="dp-c"><span class="mono">들고 온 기운</span><b>${dEls.map((e) => `${elDot(e)}${EL_KO[e]}`).join(' ')}</b><small>${dEls.map((e) => EL_HANJA[e]).join(' · ')}</small></div>
       <div class="dp-c"><span class="mono">채워준 자리</span><b>${EL_KO[m.filled]} ${EL_HANJA[m.filled]}</b><small>원래 ${a.elCount[m.filled]}글자</small></div>
     </div>

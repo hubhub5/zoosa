@@ -20,7 +20,7 @@ function randomInput(): Inputs {
     adopt: { y: ay, m: 1 + Math.floor(rnd() * (ay === 2026 ? 10 : 12)), d: rnd() < 0.3 ? null : 1 + Math.floor(rnd() * 28) },
     route: pick(['', 'shop', 'shelter', 'rescue', 'family', 'etc'] as const),
     sick: rnd() < 0.2,
-    dogBirthYear: rnd() < 0.5 ? null : ay - 1,
+    ...(rnd() < 0.4 ? { dateKind: 'birth' as const, dogBirthYear: ay } : { dateKind: 'meet' as const, dogBirthYear: null }),
   };
 }
 

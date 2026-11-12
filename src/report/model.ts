@@ -17,6 +17,8 @@ export interface Inputs {
   adopt: { y: number; m: number; d: number | null };
   route: Route;
   sick: boolean;
+  /** 날짜가 '우리 집 온 날'인지 '생일'인지 */
+  dateKind: 'meet' | 'birth';
   dogBirthYear: number | null;
 }
 
@@ -138,7 +140,8 @@ export function encodeInputs(i: Inputs): string {
     a: `${i.adopt.y}${String(i.adopt.m).padStart(2, '0')}${i.adopt.d ? String(i.adopt.d).padStart(2, '0') : ''}`,
     r: i.route,
     s: i.sick ? '1' : '',
-    db: i.dogBirthYear ? String(i.dogBirthYear) : '',
+    db: i.dogBirthYear && i.dateKind !== 'birth' ? String(i.dogBirthYear) : '',
+    dt: i.dateKind === 'birth' ? 'b' : '',
   });
   return q.toString();
 }
@@ -164,7 +167,8 @@ export function decodeInputs(s: string): Inputs | null {
       adopt: { y: +a.slice(0, 4), m: +a.slice(4, 6), d: a.length === 8 ? +a.slice(6, 8) : null },
       route: (q.get('r') ?? '') as Route,
       sick: q.get('s') === '1',
-      dogBirthYear: q.get('db') ? +q.get('db')! : null,
+      dateKind: q.get('dt') === 'b' ? 'birth' : 'meet',
+      dogBirthYear: q.get('dt') === 'b' ? +a.slice(0, 4) : q.get('db') ? +q.get('db')! : null,
     };
   } catch { return null; }
 }

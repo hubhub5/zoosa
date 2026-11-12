@@ -14,5 +14,5 @@ export const CONFIG = {
   ],
   contact: 'hello@example.com',
   seller: '판매자 이름(상호)',
-  brand: '견주사주',
+  brand: '보호자사주',
 };

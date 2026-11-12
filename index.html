@@ -2,9 +2,9 @@
 <html lang="ko">
 <head>
 <!--HEAD-->
-<title>견주사주 · 얘는 왜 하필 그때 나한테 왔을까</title>
+<title>보호자사주 · 얘는 왜 하필 그때 나한테 왔을까</title>
 <meta name="description" content="강아지 사주 말고 내 사주. 우리 개가 내 인생 몇 번째 대운에 왔는지, 그해 나한테 무슨 일이 있었는지 봐요.">
-<meta property="og:title" content="견주사주 · 얘는 왜 하필 그때 나한테 왔을까">
+<meta property="og:title" content="보호자사주 · 얘는 왜 하필 그때 나한테 왔을까">
 <meta property="og:description" content="내 대운 그래프 위에 우리 개 온 날 찍어 보기">
 <meta property="og:image" content="%SITE%og.png">
 </head>
@@ -49,18 +49,23 @@
       <fieldset>
         <legend>우리 개</legend>
         <label class="f"><span>이름</span><input name="dog" maxlength="10" placeholder="율이" required></label>
-        <div class="f"><span>우리 집 온 날</span>
-          <div class="ymd"><input name="ay" inputmode="numeric" maxlength="4" placeholder="2021" aria-label="입양 연도"><input name="am" inputmode="numeric" maxlength="2" placeholder="05" aria-label="입양 월"><input name="ad" inputmode="numeric" maxlength="2" placeholder="일(모르면 비움)" aria-label="입양 일"></div>
+        <div class="f"><span>어떤 날짜로 볼까요?</span>
+          <div class="seg"><label><input type="radio" name="dt" value="m" checked><span>우리 집 온 날</span></label><label><input type="radio" name="dt" value="b"><span>생일</span></label></div>
+          <small>만난 날을 모르거나, 구조한 날을 생일로 정했다면 생일로 골라 주세요.</small>
+        </div>
+        <div class="f"><span data-dlabel>우리 집 온 날</span>
+          <div class="ymd"><input name="ay" inputmode="numeric" maxlength="4" placeholder="2021" aria-label="연도"><input name="am" inputmode="numeric" maxlength="2" placeholder="05" aria-label="월"><input name="ad" inputmode="numeric" maxlength="2" placeholder="일(모르면 비움)" aria-label="일"></div>
           <small>날짜까지 알면 그날 일진이 우리 개 기둥이 돼요. 기억 안 나면 월까지만.</small>
         </div>
-        <div class="f"><span>견종</span>
-          <div class="coats" role="radiogroup"></div>
+        <div class="f two-sel">
+          <label><span>견종</span><select name="breed" aria-label="견종"></select></label>
+          <label><span>털색</span><select name="color" aria-label="털색"></select></label>
+          <small class="sel-note">목록에 없는 견종이면 '믹스 · 기타'로 골라 주세요.</small>
         </div>
         <label class="f"><span>어떻게 왔어요? <i>안 써도 됨</i></span>
           <select name="route"><option value="">안 고를래요</option><option value="shop">분양 (펫숍 · 브리더)</option><option value="shelter">보호소 · 임보 입양</option><option value="rescue">구조</option><option value="family">가족 · 지인에게서</option><option value="etc">기타</option></select>
         </label>
         <label class="f chk"><input type="checkbox" name="sick"><span>처음 왔을 때 아팠거나 상태가 안 좋았어요</span></label>
-        <label class="f"><span>우리 개 태어난 해 <i>안 써도 됨</i></span><input name="dby" inputmode="numeric" maxlength="4" placeholder="2020"></label>
       </fieldset>
       <p class="fm-err mono" role="alert"></p>
       <button class="btn fm-go" type="submit">무료로 앞부분 보기</button>
@@ -103,8 +108,8 @@
     <header class="sec-h"><span class="mono">문답</span><h2>자주 물어보는 거</h2></header>
     <div class="info faq">
       <div class="row"><span>태어난 시간 몰라요</span><span>괜찮아요. 시간 칸만 빼고 6글자로 봐요. 대운 그래프랑 입양 분석은 똑같이 나와요.</span></div>
-      <div class="row"><span>데려온 날짜가 기억 안 나요</span><span>몇 년 몇 월까지만 넣어도 돼요. 그럼 그달 기운으로 봐요.</span></div>
-      <div class="row"><span>강아지 생일은요?</span><span>몰라도 돼요. 이건 내 사주에 개가 어디로 들어왔는지 보는 거라서요.</span></div>
+      <div class="row"><span>데려온 날짜가 기억 안 나요</span><span>생일로 골라서 넣어도 되고, 몇 년 몇 월까지만 넣어도 돼요. 날짜를 모르면 그달 기운으로 봐요.</span></div>
+      <div class="row"><span>구조해서 만난 날을 생일로 정했어요</span><span>그럼 생일로 골라서 그 날짜를 넣으면 돼요. 계산은 똑같이 하고 문구만 생일 기준으로 나와요.</span></div>
       <div class="row"><span>우리 집 여러 마리인데요</span><span>한 마리씩 따로 넣으면 돼요. 코드 하나로 같은 브라우저에선 다 열려요.</span></div>
       <div class="row"><span>결제는 어떻게 해요?</span><span>그로블(Groble)에서 결제하면 코드가 바로 와요. 그 코드 넣으면 04–09장 열려요.</span></div>
       <div class="row"><span>시간 보정도 해요?</span><span>네. 한국은 실제 태양 시간보다 시계가 30분 빨라서 그만큼 당겨서 봐요. 1954–61년 표준시랑 1948–60, 1987–88년 서머타임도 다 반영했어요.</span></div>

@@ -1,4 +1,4 @@
-/* 견주사주 전용. tokens/base/doc 위에 얹는다. */
+/* 보호자사주 전용. tokens/base/doc 위에 얹는다. */
 ::selection { background: var(--accent); color: var(--on-accent); }
 .hz { font-family: var(--serif); letter-spacing: 0; font-weight: 700; }
 .px { image-rendering: pixelated; image-rendering: crisp-edges; }
