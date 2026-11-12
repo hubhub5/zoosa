@@ -33,13 +33,7 @@ export default defineConfig({
         refund: resolve(__dirname, 'refund.html'),
         privacy: resolve(__dirname, 'privacy.html'),
       },
-      // 파일 이름을 배포마다 바꾸지 않는다. GitHub Pages 가 HTML 을 10분 캐시하므로
-      // 해시 이름을 쓰면 예전 HTML 이 지워진 스크립트를 찾다가 화면이 빈다.
-      output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name][extname]',
-      },
+      // 파일 이름은 해시로 바꾸고, 예전 HTML 이 없는 파일을 찾으면 partials/head.html 의 복구 스크립트가 새로 불러온다
     },
   },
 });
