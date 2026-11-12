@@ -351,7 +351,7 @@ function distCard(m: Model, id: keyof typeof DIST, rank: number, score: number, 
     </div>
     <h4>실제로는 이런 식</h4>
     ${c.scenes.map((s) => `<div class="scene"><span class="mono">${s.at}</span>${s.line}</div>`).join('')}
-    <div class="note-box dogbox"><h3>${esc(josa(dog, '이', '가'))} 끊어주는 순간</h3>${c.dog.map((d) => `<p>${d.replace(/개는|개가|개한테|개와|개도|개 털/g, (w) => esc(dog) + (w === '개는' ? (hasBatchim(dog) ? '은' : '는') : w === '개가' ? (hasBatchim(dog) ? '이' : '가') : w === '개한테' ? '한테' : w === '개도' ? '도' : w === '개 털' ? ' 털' : (hasBatchim(dog) ? '과' : '와')))}</p>`).join('')}</div>
+    <div class="note-box dogbox"><h3>${esc(josa(dog, '이', '가'))} 끊어주는 순간</h3>${c.dog.map((d) => `<p>${d.replace(/강아지는|강아지가|강아지한테|강아지와|강아지도|강아지 털/g, (w) => esc(dog) + (w === '강아지는' ? (hasBatchim(dog) ? '은' : '는') : w === '강아지가' ? (hasBatchim(dog) ? '이' : '가') : w === '강아지한테' ? '한테' : w === '강아지도' ? '도' : w === '강아지 털' ? ' 털' : (hasBatchim(dog) ? '과' : '와')))}</p>`).join('')}</div>
     <div class="talk"><div class="hd">원래 하던 말</div><div class="hd">이렇게 바꿔 말하면</div>${c.reframe.map((r) => `<div>${r.from}</div><div>${r.to}</div>`).join('')}</div>
   </article>`;
 }

@@ -5,7 +5,7 @@ export interface BranchContent {
   title: string;
   checks: string[];
   quotes: string[];
-  after: string;   // 개가 온 뒤 바뀐 것 (단어 묶음)
+  after: string;   // 강아지가 온 뒤 바뀐 것 (단어 묶음)
 }
 
 export const ADOPT: Record<BranchId, BranchContent> = {
@@ -52,8 +52,8 @@ export const ADOPT: Record<BranchId, BranchContent> = {
     after: '계획에 없던 일 → 이유가 된 일',
   },
   rescue: {
-    tag: '살린 개',
-    title: '살려고 나한테 온 개',
+    tag: '살린 강아지',
+    title: '살려고 나한테 온 강아지',
     checks: ['처음 왔을 때 상태가 안 좋았다', '병원을 엄청 다녔다', '사료랑 간식을 다 바꿨다', '좋아지는 걸 매일 눈으로 봤다', '"나 아니었으면 어쩔 뻔했어" 생각한 적 있다'],
     quotes: ['얘 살려고 나한테 왔구나', '털 다시 올라오는 거 보고 울었음', '나 아니었으면 진짜 어떻게 됐을까'],
     after: '내가 살린 줄 알았는데 → 같이 살아난 거',

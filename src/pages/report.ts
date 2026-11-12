@@ -11,14 +11,14 @@ import { breedName } from '../content/breeds';
 initCommon();
 
 const root = document.getElementById('report')!;
-// sample.html: 결제 후 화면을 보여주는 고정 예시 (가상의 보호자와 개)
+// sample.html: 결제 후 화면을 보여주는 고정 예시
 const SAMPLE = document.body.hasAttribute('data-sample');
 const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%EA%B9%80%EC%9C%A8&f=poodle&fc=brown&a=202111&r=shop&s=&db=';
 const hash = SAMPLE ? SAMPLE_HASH : location.hash.slice(1);
 const inp = decodeInputs(hash);
 
 if (!inp) {
-  root.innerHTML = `<div class="page-head" style="margin-top:40px"><div class="kicker mono">입력 없음</div><h1>아직 입력한 게 없어요</h1><p>첫 화면에서 생일이랑 우리 개 온 날부터 넣어 주세요.</p></div><a class="btn" href="./#form">입력하러 가기</a>`;
+  root.innerHTML = `<div class="page-head" style="margin-top:40px"><div class="kicker mono">입력 없음</div><h1>아직 입력한 게 없어요</h1><p>첫 화면에서 생일이랑 우리 강아지 온 날부터 넣어 주세요.</p></div><a class="btn" href="./#form">입력하러 가기</a>`;
 } else {
   if (!SAMPLE) rememberReport(hash);
   const m = buildModel(inp);
@@ -34,7 +34,7 @@ if (!inp) {
     ['보호자', inp.owner || '-'],
     ['생일', `${b.y}.${b.m}.${b.d} ${b.calendar === 'lunar' ? (b.leap ? '음(윤)' : '음') : '양'}`],
     ['시각', b.hh === null ? '모름' : `${String(b.hh).padStart(2, '0')}:${String(b.mm ?? 0).padStart(2, '0')}`],
-    ['개', inp.dog],
+    ['강아지', inp.dog],
     ['견종', breedName(inp.breed, inp.color)],
     [inp.dateKind === 'birth' ? '생일' : '온 날', `${inp.adopt.y}.${inp.adopt.m}${inp.adopt.d ? '.' + inp.adopt.d : ''}`],
     ['경로', ROUTE_KO[inp.route] ?? '-'],
@@ -103,7 +103,7 @@ function wireShare(m: Model, paid: boolean) {
     const facts: [string, string][] = [
       ['그해', `${pillarHanja(m.adoption.pillars.year)}년`],
       ['그때 나는', ADOPT[m.adoption.primary].tag],
-      ['우리 개 기둥', pillarHanja(m.dogPillar)],
+      ['우리 강아지 기둥', pillarHanja(m.dogPillar)],
       ['채워준 기운', `${EL_KO[m.filled]} ${EL_HANJA[m.filled]}`],
     ];
     const cw = (W - P * 2) / 4;

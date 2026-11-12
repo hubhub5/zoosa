@@ -79,7 +79,7 @@ f.addEventListener('submit', (e) => {
     try { Lunar.fromYmd(by, cal === 'L' ? -bm : bm, bd).getSolar(); } catch { return fail(cal === 'L' ? '그해엔 그 달 윤달이 없어요.' : '음력 날짜가 이상해요.', 'bd'); }
   }
   const dog = s('dog');
-  if (!dog) return fail('우리 개 이름은 꼭 넣어 주세요.', 'dog');
+  if (!dog) return fail('우리 강아지 이름은 꼭 넣어 주세요.', 'dog');
   const ay = n('ay'), am = n('am'), adRaw = s('ad'), ad = adRaw ? Number(adRaw) : null;
   if (!(ay >= by && ay <= now.getFullYear())) return fail(birth ? '생일 연도가 이상해요.' : '데려온 연도가 이상해요.', 'ay');
   if (!(am >= 1 && am <= 12)) return fail(birth ? '생일 월이 이상해요.' : '데려온 월이 이상해요.', 'am');

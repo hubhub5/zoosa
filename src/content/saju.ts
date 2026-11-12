@@ -4,8 +4,8 @@ export interface StemContent { image: string; words: string[]; outside: string; 
 // 일간 10
 export const STEM_TEXT: StemContent[] = [
   { image: '큰 나무', words: ['곧음', '앞장', '고집', '시작', '자존심', '책임감'], outside: '듬직함', inside: '생각 많음', asOwner: '앞장서 걷는 보호자' },
-  { image: '덩굴 · 들꽃', words: ['유연함', '끈기', '눈치', '생활력', '섬세함', '버팀'], outside: '부드러움', inside: '계산 빠름', asOwner: '개 속도에 맞춰 걷는 보호자' },
-  { image: '한낮의 해', words: ['밝음', '솔직함', '오지랖', '무대', '열정', '기분파'], outside: '분위기 메이커', inside: '쉽게 지침', asOwner: '동네 개들이 다 아는 보호자' },
+  { image: '덩굴 · 들꽃', words: ['유연함', '끈기', '눈치', '생활력', '섬세함', '버팀'], outside: '부드러움', inside: '계산 빠름', asOwner: '강아지 속도에 맞춰 걷는 보호자' },
+  { image: '한낮의 해', words: ['밝음', '솔직함', '오지랖', '무대', '열정', '기분파'], outside: '분위기 메이커', inside: '쉽게 지침', asOwner: '동네 강아지들이 다 아는 보호자' },
   { image: '촛불 · 등불', words: ['섬세함', '집중', '온기', '예민함', '헌신', '속앓이'], outside: '다정함', inside: '불안', asOwner: '자다가도 숨소리 확인하는 보호자' },
   { image: '큰 산', words: ['묵직함', '신뢰', '고집', '느림', '포용', '버팀'], outside: '어른스러움', inside: '외로움', asOwner: '말없이 기다려 주는 보호자' },
   { image: '기름진 밭', words: ['살림', '실속', '배려', '걱정', '현실감', '알뜰함'], outside: '챙겨주는 사람', inside: '걱정 많음', asOwner: '간식 성분표 정독하는 보호자' },
