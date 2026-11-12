@@ -55,13 +55,19 @@ function pillarCol(m: Model, label: string, p: Pillar | null, isDay = false): st
 }
 
 /** 표지 한 줄: 1위 생각 버릇 + 강아지가 채워준 기운. 같은 버릇끼리도 계기·채운 기운에 따라 다른 버전 */
-export function verdictOf(m: Model): { me: string; gift: string; extra: string } {
+export interface Verdict { label: string; line1: string; line2: string; line3: string }
+/** 관리자 페이지에서 문구를 직접 지정할 때 (full-*.html 의 data-verdict) */
+let verdictOverride: Verdict | null = null;
+export const setVerdictOverride = (v: Verdict | null) => { verdictOverride = v; };
+
+export function verdictOf(m: Model): Verdict {
+  if (verdictOverride) return verdictOverride;
   const top = m.dist[0].id;
   const order = ['move', 'work', 'relation', 'low', 'restart', 'chance', 'rescue'];
   const seed = Number(m.reportNo) + order.indexOf(m.adoption.primary) * 7 + EL_ORDER.indexOf(m.filled) * 3;
   const v = VERDICT[top][seed % VERDICT[top].length];
   const els = VERDICT_EL[m.filled];
-  return { me: v.me, gift: v.gift, extra: els[Math.floor(seed / 3) % els.length] };
+  return { label: '왜 하필 그때 왔냐면', line1: `${v.me},`, line2: `${v.gift} ${m.inp.dog}`, line3: `그리고 ${els[Math.floor(seed / 3) % els.length]}.` };
 }
 
 export function renderReport(m: Model, unlocked: boolean): { head: string; body: string; toc: { id: string; no: string; t: string; locked: boolean }[] } {
@@ -95,7 +101,7 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
     </div>
     <p class="cover-kick">${esc(ownerN)} 사주 위에 ${esc(dog)} 얹어 봄 <span class="mono">· ${esc(breedLabel(inp.breed, inp.color))}</span></p>
     <h1 class="cover-title">${esc(josa(dog, '은', '는'))}<br>${esc(ownerN)}의 <em>${nth}</em>에 왔다</h1>
-    ${(() => { const v = verdictOf(m); return `<div class="verdict"><span class="mono">왜 하필 그때 왔냐면</span><p>${esc(v.me)},<br><b>${esc(v.gift)} ${esc(dog)}</b></p><small>그리고 ${esc(v.extra)}.</small></div>`; })()}
+    ${(() => { const v = verdictOf(m); return `<div class="verdict"><span class="mono">${esc(v.label)}</span><p>${esc(v.line1)}<br><b>${esc(v.line2)}</b></p><small>${esc(v.line3)}</small></div>`; })()}
     <div class="cover-facts">
       <div><span class="mono">${BD ? '생일' : '우리 집 온 날'}</span><b>${adoptLabel}</b></div>
       <div><span class="mono">그해</span><b>${pillarHanja(ad.pillars.year)}년 ${pillarHanja(ad.pillars.month)}월</b></div>

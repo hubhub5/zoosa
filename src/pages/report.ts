@@ -1,6 +1,6 @@
 import { initCommon } from '../common';
 import { decodeInputs, buildModel, type Model } from '../report/model';
-import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf } from '../report/render';
+import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf, setVerdictOverride } from '../report/render';
 import { wireCharts } from '../charts/charts';
 import { isUnlocked, rememberReport } from '../unlock';
 import { pillarHanja, STEMS, BRANCHES, EL_HANJA, EL_KO } from '../saju/constants';
@@ -15,6 +15,7 @@ const SAMPLE = document.body.hasAttribute('data-sample');
 const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%EA%B9%80%EC%9C%A8&f=poodle&fc=brown&a=202111&r=shop&s=&db=';
 // full-*.html: 관리자용. 페이지에 박힌 입력 한 건만 결제한 상태로 보여 준다 (사이트 어디에도 링크 없음)
 const FIXED = document.body.dataset.fixed ?? '';
+if (FIXED && document.body.dataset.verdict) { try { setVerdictOverride(JSON.parse(document.body.dataset.verdict)); } catch { /* 잘못된 값이면 자동 문장 */ } }
 const hash = FIXED || (SAMPLE ? SAMPLE_HASH : location.hash.slice(1));
 const inp = decodeInputs(hash);
 
@@ -103,12 +104,12 @@ function wireShare(m: Model, paid: boolean) {
     const wrap = (t: string, max: number) => { const out: string[] = []; let cur = ''; for (const w of t.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (x.measureText(nx).width > max && cur) { out.push(cur); cur = w; } else cur = nx; } if (cur) out.push(cur); return out; };
     const vy0 = 808; let vy = vy0;
     x.fillStyle = '#574e44'; x.font = sans(400, 32); sp('', -2.2);
-    for (const l of wrap(v.me + ',', W - P * 2 - 30)) { x.fillText(l, P + 26, vy); vy += 44; }
+    for (const l of wrap(v.line1, W - P * 2 - 30)) { x.fillText(l, P + 26, vy); vy += 44; }
     x.fillStyle = ink; x.font = sans(800, 34); sp('', -2.4);
-    for (const l of wrap(`${v.gift} ${m.inp.dog}`, W - P * 2 - 30).slice(0, 3)) { x.fillText(l, P + 26, vy); vy += 46; }
+    for (const l of wrap(v.line2, W - P * 2 - 30).slice(0, 3)) { x.fillText(l, P + 26, vy); vy += 46; }
     x.fillStyle = acc; x.fillRect(P, vy0 - 32, 6, vy - vy0 + 14);
     x.fillStyle = '#8f8475'; x.font = sans(400, 26); sp('', -1.8);
-    if (vy < 930) x.fillText(`그리고 ${v.extra}.`, P + 26, vy + 22);
+    if (vy < 930) x.fillText(v.line3, P + 26, vy + 22);
     // 사실 칸
     const facts: [string, string][] = [
       ['그해', `${pillarHanja(m.adoption.pillars.year)}년`],
