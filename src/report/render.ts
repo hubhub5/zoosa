@@ -9,6 +9,7 @@ import { STEM_TEXT, TG_TEXT, GROUP_THEME, EL_TEXT } from '../content/saju';
 import { elementBars, pairedBars, timelineChart, distBars, gauge, spark, elVar } from '../charts/charts';
 import { CONFIG } from '../config';
 import { base } from '../paths';
+import { VERDICT, VERDICT_EL } from '../content/verdict';
 import { spriteFor } from '../content/breeds';
 export const breedLabel = (b: string, c: string) => (c ? `${b} · ${c}` : b);
 export const spriteKey = (b: string, c: string) => { const s = spriteFor(b, c); return `${s.breed}-${s.color}`; };
@@ -53,6 +54,16 @@ function pillarCol(m: Model, label: string, p: Pillar | null, isDay = false): st
   </div>`;
 }
 
+/** 표지 한 줄: 1위 생각 버릇 + 강아지가 채워준 기운. 같은 버릇끼리도 계기·채운 기운에 따라 다른 버전 */
+export function verdictOf(m: Model): { me: string; gift: string; extra: string } {
+  const top = m.dist[0].id;
+  const order = ['move', 'work', 'relation', 'low', 'restart', 'chance', 'rescue'];
+  const seed = Number(m.reportNo) + order.indexOf(m.adoption.primary) * 7 + EL_ORDER.indexOf(m.filled) * 3;
+  const v = VERDICT[top][seed % VERDICT[top].length];
+  const els = VERDICT_EL[m.filled];
+  return { me: v.me, gift: v.gift, extra: els[Math.floor(seed / 3) % els.length] };
+}
+
 export function renderReport(m: Model, unlocked: boolean): { head: string; body: string; toc: { id: string; no: string; t: string; locked: boolean }[] } {
   const { inp, chart, a, adoption: ad } = m;
   const owner = inp.owner || '당신';
@@ -84,6 +95,7 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
     </div>
     <p class="cover-kick">${esc(ownerN)} 사주 위에 ${esc(dog)} 얹어 봄 <span class="mono">· ${esc(breedLabel(inp.breed, inp.color))}</span></p>
     <h1 class="cover-title">${esc(josa(dog, '은', '는'))}<br>${esc(ownerN)}의 <em>${nth}</em>에 왔다</h1>
+    ${(() => { const v = verdictOf(m); return `<div class="verdict"><span class="mono">왜 하필 그때 왔냐면</span><p>${esc(v.me)},<br><b>${esc(v.gift)} ${esc(dog)}</b></p><small>그리고 ${esc(v.extra)}.</small></div>`; })()}
     <div class="cover-facts">
       <div><span class="mono">${BD ? '생일' : '우리 집 온 날'}</span><b>${adoptLabel}</b></div>
       <div><span class="mono">그해</span><b>${pillarHanja(ad.pillars.year)}년 ${pillarHanja(ad.pillars.month)}월</b></div>

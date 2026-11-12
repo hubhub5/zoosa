@@ -1,6 +1,6 @@
 import { initCommon } from '../common';
 import { decodeInputs, buildModel, type Model } from '../report/model';
-import { renderReport, esc, josa, breedLabel, spriteKey } from '../report/render';
+import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf } from '../report/render';
 import { wireCharts } from '../charts/charts';
 import { isUnlocked, rememberReport } from '../unlock';
 import { pillarHanja, STEMS, BRANCHES, EL_HANJA, EL_KO } from '../saju/constants';
@@ -90,16 +90,25 @@ function wireShare(m: Model, paid: boolean) {
     x.textAlign = 'right'; x.fillText(`${m.inp.adopt.y}.${String(m.inp.adopt.m).padStart(2, '0')} → D+${m.adoption.dPlus.toLocaleString()}`, W - P, 108); x.textAlign = 'left';
     x.beginPath(); x.moveTo(P, 132); x.lineTo(W - P, 132); x.strokeStyle = ink; x.lineWidth = 2; x.stroke();
     // 그림
-    x.fillStyle = '#f7f2e7'; x.fillRect(P, 160, W - P * 2, 456);
+    x.fillStyle = '#f7f2e7'; x.fillRect(P, 160, W - P * 2, 450);
     x.imageSmoothingEnabled = false;
-    if (img.naturalWidth) { const s = Math.floor((W - P * 2 - 40) / img.naturalWidth); const iw = img.naturalWidth * s, ih = img.naturalHeight * s; x.drawImage(img, (W - iw) / 2, 160 + 456 - ih, iw, ih); }
+    if (img.naturalWidth) { const s = (W - P * 2 - 20) / img.naturalWidth; const iw = img.naturalWidth * s, ih = img.naturalHeight * s; x.drawImage(img, (W - iw) / 2, 160 + 450 - ih, iw, ih); }
     // 제목
     const du = m.daeunAtAdopt;
-    x.fillStyle = ink; x.font = sans(800, 70); sp('', -4.9);
-    x.fillText(josa(m.inp.dog, '은', '는'), P, 728);
-    x.fillText(`${m.inp.owner ? m.inp.owner + '님' : '내'} ${du ? du.idx + '번째 대운' : '첫 대운 전'}에`, P, 812);
-    x.fillText('왔다', P, 896);
-    x.fillStyle = acc; x.fillRect(P, 920, 120, 8);
+    x.fillStyle = ink; x.font = sans(800, 58); sp('', -4);
+    x.fillText(`${josa(m.inp.dog, '은', '는')} ${m.inp.owner ? m.inp.owner + '님의' : '나의'}`, P, 682);
+    x.fillText(`${du ? du.idx + '번째 대운' : '첫 대운 전'}에 왔다`, P, 750);
+    // 왜 왔는지 한 줄
+    const v = verdictOf(m);
+    const wrap = (t: string, max: number) => { const out: string[] = []; let cur = ''; for (const w of t.split(' ')) { const nx = cur ? cur + ' ' + w : w; if (x.measureText(nx).width > max && cur) { out.push(cur); cur = w; } else cur = nx; } if (cur) out.push(cur); return out; };
+    const vy0 = 808; let vy = vy0;
+    x.fillStyle = '#574e44'; x.font = sans(400, 32); sp('', -2.2);
+    for (const l of wrap(v.me + ',', W - P * 2 - 30)) { x.fillText(l, P + 26, vy); vy += 44; }
+    x.fillStyle = ink; x.font = sans(800, 34); sp('', -2.4);
+    for (const l of wrap(`${v.gift} ${m.inp.dog}`, W - P * 2 - 30).slice(0, 3)) { x.fillText(l, P + 26, vy); vy += 46; }
+    x.fillStyle = acc; x.fillRect(P, vy0 - 32, 6, vy - vy0 + 14);
+    x.fillStyle = '#8f8475'; x.font = sans(400, 26); sp('', -1.8);
+    if (vy < 930) x.fillText(`그리고 ${v.extra}.`, P + 26, vy + 22);
     // 사실 칸
     const facts: [string, string][] = [
       ['그해', `${pillarHanja(m.adoption.pillars.year)}년`],
