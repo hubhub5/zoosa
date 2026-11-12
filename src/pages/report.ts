@@ -13,15 +13,17 @@ const root = document.getElementById('report')!;
 // sample.html: 결제 후 화면을 보여주는 고정 예시
 const SAMPLE = document.body.hasAttribute('data-sample');
 const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%EA%B9%80%EC%9C%A8&f=poodle&fc=brown&a=202111&r=shop&s=&db=';
-const hash = SAMPLE ? SAMPLE_HASH : location.hash.slice(1);
+// full-*.html: 관리자용. 페이지에 박힌 입력 한 건만 결제한 상태로 보여 준다 (사이트 어디에도 링크 없음)
+const FIXED = document.body.dataset.fixed ?? '';
+const hash = FIXED || (SAMPLE ? SAMPLE_HASH : location.hash.slice(1));
 const inp = decodeInputs(hash);
 
 if (!inp) {
   root.innerHTML = `<div class="page-head" style="margin-top:40px"><div class="kicker mono">입력 없음</div><h1>아직 입력한 게 없어요</h1><p>첫 화면에서 생일이랑 우리 강아지 온 날부터 넣어 주세요.</p></div><a class="btn" href="./#form">입력하러 가기</a>`;
 } else {
-  if (!SAMPLE) rememberReport(hash);
+  if (!SAMPLE && !FIXED) rememberReport(hash);
   const m = buildModel(inp);
-  const unlocked = SAMPLE || isUnlocked();
+  const unlocked = SAMPLE || !!FIXED || isUnlocked();
   const { head, body, toc } = renderReport(m, unlocked);
   const bar = SAMPLE ? `<div class="sample-bar"><div><b>예시 리포트</b><span>결제하면 이렇게 끝까지 다 나와요. 아래는 김예빈님과 김율 예시예요.</span></div><a class="btn" href="./#form">내 걸로 보기</a></div>` : '';
   root.innerHTML = bar + head + body + `<div class="disclaimer"><p>계산: 만세력(진태양시 −${m.chart.correctionMin}분 보정${m.chart.corrected ? '' : ', 시각 미상'}), 대운수 ${m.chart.daeunStartAge}. 생각 버릇 점수는 내 사주 비중을 무작위 생년월일 2만 개랑 비교해서 몇 등쯤인지 본 거예요.</p><p>재미로, 나를 좀 더 알아보는 용도로 봐 주세요. 심리 진단은 아니에요.</p></div>`;

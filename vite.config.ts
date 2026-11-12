@@ -27,6 +27,7 @@ export default defineConfig({
         index: resolve(__dirname, 'index.html'),
         report: resolve(__dirname, 'report.html'),
         sample: resolve(__dirname, 'sample.html'),
+        full1: resolve(__dirname, 'full-e31f9f43f85e.html'),
         unlock: resolve(__dirname, 'unlock.html'),
         terms: resolve(__dirname, 'terms.html'),
         refund: resolve(__dirname, 'refund.html'),
