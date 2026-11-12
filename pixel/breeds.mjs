@@ -41,6 +41,7 @@ export const BREEDS = {
   beagle: { name: '비글', c: { base: '#cf8d4a', shade: '#ad7136' }, body: { x: 15, y: 19.5, rx: 8, ry: 4.4 }, head: { dx: -1, dy: -6, rx: 4.5, ry: 4 }, snout: { len: 3, h: 2.6, dy: 1.2 }, ear: { type: 'flop', size: 4.6, col: '#a86a33' }, tail: { type: 'up', len: 6, tip: '#fbf4e8' }, marks: [{ on: 'body', x: -1, y: -2.4, rx: 6.4, ry: 2.6, col: '#2c2522' }, { on: 'body', x: 4.6, y: 2.6, rx: 3.2, ry: 2.4, col: '#fbf4e8' }, { on: 'snout', x: 0, y: 0, rx: 99, ry: 99, col: '#fbf4e8' }, { on: 'leg', x: 0, y: 2, rx: 99, ry: 3, col: '#fbf4e8' }] },
   bordercollie: { name: '보더 콜리', c: { base: '#2a2422', shade: '#1a1514' }, body: { x: 15, y: 19.5, rx: 8.5, ry: 4.4 }, head: { dx: -1, dy: -6, rx: 4.5, ry: 4 }, snout: { len: 3, h: 2.4, dy: 1.2 }, ear: { type: 'fold', size: 2.8 }, tail: { type: 'plume', len: 7, tip: '#fbf4e8' }, fluffy: 0.6, marks: [{ on: 'body', x: 6, y: 0, rx: 2.8, ry: 6, col: '#fbf4e8' }, { on: 'snout', x: 0, y: 0, rx: 99, ry: 99, col: '#fbf4e8' }, { on: 'head', x: 1.4, y: -1, rx: 0.9, ry: 4, col: '#fbf4e8' }, { on: 'leg', x: 0, y: 2, rx: 99, ry: 3, col: '#fbf4e8' }] },
   samoyed: { name: '사모예드', c: { base: '#fdfbf7', shade: '#e4ded2' }, body: { x: 14.5, y: 19, rx: 9, ry: 5.2 }, head: { dx: -1, dy: -6, rx: 4.8, ry: 4.4 }, snout: { len: 2.6, h: 2.4, dy: 1.2 }, ear: { type: 'prick', size: 3.2 }, tail: { type: 'curl', len: 7 }, fluffy: 1.4 },
+  sighthound: { name: '이탈리안 그레이하운드', c: { base: '#9aa0a8', shade: '#7b818a' }, body: { x: 14.5, y: 14.2, rx: 7.4, ry: 2.6 }, leg: { w: 1 }, head: { dx: 2.2, dy: -6.4, rx: 3.3, ry: 2.6 }, snout: { len: 4.2, h: 1.7, dy: 0.8 }, neck: true, deepChest: true, ear: { type: 'fold', size: 2 }, tail: { type: 'whip', len: 8 }, marks: [{ on: 'body', x: 4.4, y: 1.6, rx: 2, ry: 1.8, col: '#eceae6' }] },
   mix: { name: '믹스', c: { base: '#f0d6a8', shade: '#d4b07c' } },
 };
 export const BREED_ORDER = Object.keys(BREEDS);
@@ -124,6 +125,15 @@ export const COLORS = {
     { id: 'red', name: '레드', c: { base: '#7a4428', shade: '#5a2f19' } },
     { id: 'blue', name: '블루멀', c: { base: '#7d8794', shade: '#5f6873' } },
   ],
+  sighthound: [
+    { id: 'grey', name: '블루' },
+    { id: 'fawn', name: '폰', c: { base: '#d8b98e', shade: '#b8996e' } },
+    { id: 'black', name: '블랙', c: { base: '#2c2826', shade: '#1b1817' } },
+    { id: 'red', name: '레드', c: { base: '#c08051', shade: '#9b6239' } },
+    { id: 'cream', name: '크림', c: { base: '#efe2c9', shade: '#d2c2a4' }, marks: [] },
+    { id: 'white', name: '화이트', c: { base: '#f6f3ee', shade: '#dad4ca' }, marks: [] },
+    { id: 'spot', name: '파티', c: { base: '#f6f3ee', shade: '#dad4ca' }, marks: [{ on: 'body', x: -2, y: -1, rx: 3.4, ry: 2.4, col: '#8e949c' }, { on: 'head', x: -0.6, y: -0.8, rx: 2, ry: 1.8, col: '#8e949c' }] },
+  ],
   mix: [
     { id: 'cream', name: '크림' },
     { id: 'brown', name: '갈색', c: { base: '#a8693b', shade: '#82492a' } },
@@ -171,6 +181,7 @@ export function sideDog(id, color = null, f = 0, { blink = false, tongue = false
   else if (t.type === 'otter') s.stroke(T([A, [A[0] - L * 0.55, A[1] + 1], [A[0] - L * 0.9, A[1] + 2.4]]), 1.3, 'tail');
   else if (t.type === 'long') s.stroke(T([A, [A[0] - L * 0.5, A[1] - 0.5], [A[0] - L, A[1] - 2.5]]), 0.9, 'tail');
   else if (t.type === 'pom') { s.stroke(T([A, [A[0] - 1, A[1] - 2.5]]), 0.8, 'tail'); const [px, py] = rot([A[0] - 1.3, A[1] - 4], A, wag); s.ellipse(px, py, 2, 2, 'tail'); }
+  else if (t.type === 'whip') s.stroke(T([A, [A[0] - 3.4, A[1] + 1.2], [A[0] - 5.4, A[1] + 4.6], [A[0] - 5.2, A[1] + 8]]), 0.7, 'tail');
   else if (t.type === 'stub') s.ellipse(...rot([A[0] - 0.6, A[1] - 0.6], A, wag), 1.6, 1.4, 'tail');
 
   // 다리 (먼 쪽 먼저, 어둡게)
@@ -188,6 +199,9 @@ export function sideDog(id, color = null, f = 0, { blink = false, tongue = false
   }
   s.def('body', { ...fur });
   s.ellipse(B.x, B.y, B.rx, B.ry, 'body');
+  // 시각 하운드: 깊은 가슴, 잘록한 허리, 긴 목
+  if (d.deepChest) s.ellipse(B.x + B.rx * 0.45, B.y + 1, 3.4, 3.4, 'body');
+  if (d.neck) s.stroke([[B.x + B.rx - 2.4, B.y - 1], [Hx - 0.6, Hy + 1.2]], 1.5, 'body');
   s.def('leg', { ...fur, edge: OUT, edgeSkip: ['body'] });
   s.rect(Math.round(bx0), Math.floor(legTop), Math.ceil(lw), GROUND - Math.floor(legTop), 'leg');
   s.rect(Math.round(fx0), Math.floor(legTop), Math.ceil(lw), GROUND - Math.floor(legTop), 'leg');

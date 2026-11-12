@@ -9,7 +9,9 @@ import { STEM_TEXT, TG_TEXT, GROUP_THEME, EL_TEXT } from '../content/saju';
 import { elementBars, pairedBars, timelineChart, distBars, gauge, spark, elVar } from '../charts/charts';
 import { CONFIG } from '../config';
 import { base } from '../paths';
-import { breedName } from '../content/breeds';
+import { spriteFor } from '../content/breeds';
+export const breedLabel = (b: string, c: string) => (c ? `${b} · ${c}` : b);
+export const spriteKey = (b: string, c: string) => { const s = spriteFor(b, c); return `${s.breed}-${s.color}`; };
 
 export const esc = (s: string | number) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 const hasBatchim = (w: string) => {
@@ -78,9 +80,9 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
       <span>${esc(dog)} D+${ad.dPlus.toLocaleString()}</span>
     </div>
     <div class="cover-art">
-      <img src="${base}px/scene-${inp.breed}-${inp.color}.gif" width="440" height="220" alt="${esc(josa(owner, '과', '와'))} ${esc(dog)}의 픽셀 그림" class="px">
+      <img src="${base}px/scene-${spriteKey(inp.breed, inp.color)}.gif" width="440" height="220" alt="${esc(josa(owner, '과', '와'))} ${esc(dog)}의 픽셀 그림" class="px">
     </div>
-    <p class="cover-kick">${esc(ownerN)} 사주 위에 ${esc(dog)} 얹어 봄 <span class="mono">· ${esc(breedName(inp.breed, inp.color))}</span></p>
+    <p class="cover-kick">${esc(ownerN)} 사주 위에 ${esc(dog)} 얹어 봄 <span class="mono">· ${esc(breedLabel(inp.breed, inp.color))}</span></p>
     <h1 class="cover-title">${esc(josa(dog, '은', '는'))}<br>${esc(ownerN)}의 <em>${nth}</em>에 왔다</h1>
     <div class="cover-facts">
       <div><span class="mono">${BD ? '생일' : '우리 집 온 날'}</span><b>${adoptLabel}</b></div>

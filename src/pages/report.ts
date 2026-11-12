@@ -1,12 +1,11 @@
 import { initCommon } from '../common';
 import { decodeInputs, buildModel, type Model } from '../report/model';
-import { renderReport, esc, josa } from '../report/render';
+import { renderReport, esc, josa, breedLabel, spriteKey } from '../report/render';
 import { wireCharts } from '../charts/charts';
 import { isUnlocked, rememberReport } from '../unlock';
 import { pillarHanja, STEMS, BRANCHES, EL_HANJA, EL_KO } from '../saju/constants';
 import { ADOPT, ROUTE_KO } from '../content/adoption';
 import { DIST } from '../content/distortions';
-import { breedName } from '../content/breeds';
 
 initCommon();
 
@@ -35,7 +34,7 @@ if (!inp) {
     ['생일', `${b.y}.${b.m}.${b.d} ${b.calendar === 'lunar' ? (b.leap ? '음(윤)' : '음') : '양'}`],
     ['시각', b.hh === null ? '모름' : `${String(b.hh).padStart(2, '0')}:${String(b.mm ?? 0).padStart(2, '0')}`],
     ['강아지', inp.dog],
-    ['견종', breedName(inp.breed, inp.color)],
+    ['견종', breedLabel(inp.breed, inp.color)],
     [inp.dateKind === 'birth' ? '생일' : '온 날', `${inp.adopt.y}.${inp.adopt.m}${inp.adopt.d ? '.' + inp.adopt.d : ''}`],
     ['경로', ROUTE_KO[inp.route] ?? '-'],
   ].map(([k, v]) => `<li><span class="mono">${k}</span>${esc(v)}</li>`).join('');
@@ -72,7 +71,7 @@ function wireShare(m: Model, paid: boolean) {
   const draw = async () => {
     await Promise.all([document.fonts.load('800 40px NanumSquareNeo'), document.fonts.load('400 20px NanumSquareNeo'), document.fonts.load('600 40px "Noto Serif KR"')]).catch(() => {});
     const img = new Image();
-    img.src = `./px/scene-${m.inp.breed}-${m.inp.color}.gif`;
+    img.src = `./px/scene-${spriteKey(m.inp.breed, m.inp.color)}.gif`;
     await img.decode().catch(() => {});
     const x = cv.getContext('2d')!;
     const cs = getComputedStyle(document.documentElement);

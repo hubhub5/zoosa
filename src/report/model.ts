@@ -6,12 +6,13 @@ import {
 import { readAdoption, type AdoptionResult, type Route } from '../engine/adoption';
 import { readDistortions, type DistResult } from '../engine/distortion';
 
-import { normalize, fromLegacy } from '../content/breeds';
+import { fromParams } from '../content/breeds';
 
 export interface Inputs {
   owner: string;
   birth: BirthInput;
   dog: string;
+  /** 쓴 그대로의 견종·털색 */
   breed: string;
   color: string;
   adopt: { y: number; m: number; d: number | null };
@@ -153,7 +154,7 @@ export function decodeInputs(s: string): Inputs | null {
     if (!/^\d{8}$/.test(b) || !/^\d{6}(\d{2})?$/.test(a)) return null;
     const c = q.get('c') ?? 's';
     const f = q.get('f') ?? 'mix-cream';
-    const bc = q.get('fc') ? normalize(f, q.get('fc')) : fromLegacy(f);
+    const bc = fromParams(f, q.get('fc'));
     return {
       owner: (q.get('o') ?? '').slice(0, 12),
       birth: {

@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildModel, encodeInputs, decodeInputs, type Inputs } from './model';
 import { renderReport } from './render';
-import { BREED_LIST } from '../content/breeds';
 
 let seed = 42;
 const rnd = () => ((seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296);
@@ -16,7 +15,8 @@ function randomInput(): Inputs {
     owner: pick(['', '한솔', '김', '민']),
     birth: { y: by, m: 1 + Math.floor(rnd() * 12), d: 1 + Math.floor(rnd() * 28), hh, mm: hh === null ? null : Math.floor(rnd() * 12) * 5, calendar: lunar ? 'lunar' : 'solar', leap: false, gender: rnd() < 0.5 ? 'f' : 'm' },
     dog: pick(['율이', '콩', '보리', 'Max']),
-    ...(() => { const b = pick(BREED_LIST); return { breed: b.id, color: pick(b.colors).id }; })(),
+    breed: pick(['푸들', '이탈리안 그레이하운드', '믹스', '우리집 똥강아지', '말티즈']),
+    color: pick(['', '검정', '회색', '크림', '알록달록']),
     adopt: { y: ay, m: 1 + Math.floor(rnd() * (ay === 2026 ? 10 : 12)), d: rnd() < 0.3 ? null : 1 + Math.floor(rnd() * 28) },
     route: pick(['', 'shop', 'shelter', 'rescue', 'family', 'etc'] as const),
     sick: rnd() < 0.2,

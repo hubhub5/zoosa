@@ -74,3 +74,6 @@
 .two-sel > label > span { font-size: 13px; font-weight: 700; }
 .two-sel .sel-note { grid-column: 1 / -1; }
 .two-sel select:disabled { opacity: .5; }
+
+[data-sishi] b { color: var(--ink); font-weight: 700; }
+[data-sishi].edge { color: var(--accent-ink); }
