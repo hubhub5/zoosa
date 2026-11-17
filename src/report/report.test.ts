@@ -1,3 +1,4 @@
+import '../content/overrides';
 import { describe, it, expect } from 'vitest';
 import { buildModel, encodeInputs, decodeInputs, type Inputs } from './model';
 import { renderReport } from './render';

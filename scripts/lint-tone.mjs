@@ -5,24 +5,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const RULES = [
-  [/의 모든 것/, "'~의 모든 것'"],
-  [/핵심은/, "'핵심은'"],
-  [/중요합니다|중요하다/, "'중요하다'"],
-  [/효과적(인|으로)/, "'효과적인'"],
-  [/다양한/, "'다양한'"],
-  [/해보세요|하세요!|보세요!/, '권유형 명령'],
-  [/!/, '느낌표'],
-  [/[\u{1F300}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u, '이모지'],
-  [/첫째|둘째|셋째/, '서수 나열'],
-  [/놀라운|획기적|비결|꿀팁/, '과장 표현'],
-  [/에 대해 알아보|살펴보겠|살펴봅시다/, '안내문 말투'],
-  [/여정|특별한 인연|소중한 존재|운명적|진정한|마법 같은|선물 같은/, '감성 상투어'],
-  [/것이 좋습니다|수 있습니다\.$|것입니다\.$/, '설명문 종결'],
-  [/당신만의|나만의 특별/, "'~만의'"],
-  [/깊이 있는|풍부한|탁월한|완벽한 가이드/, '광고 형용사'],
-  [/결론적으로|요약하자면|무엇보다도|뿐만 아니라/, '접속 상투어'],
-];
+import { RULES } from './tone-rules.mjs';
 
 const items = [];
 const lit = /'((?:[^'\\\n]|\\.)*)'|"((?:[^"\\\n]|\\.)*)"|`((?:[^`\\]|\\.)*)`/g;
@@ -33,7 +16,12 @@ const fromTs = (file) => {
     if (/[가-힣]/.test(s)) items.push([file.replace(ROOT + '/', ''), s.trim()]);
   }
 };
-for (const f of readdirSync(join(ROOT, 'src/content'))) fromTs(join(ROOT, 'src/content', f));
+for (const f of readdirSync(join(ROOT, 'src/content')).filter((f) => f.endsWith('.ts'))) fromTs(join(ROOT, 'src/content', f));
+{
+  // 관리자 페이지에서 고친 문구
+  const ov = JSON.parse(readFileSync(join(ROOT, 'src/content/overrides.json'), 'utf8'));
+  for (const [k, v] of Object.entries(ov)) for (const s of [v].flat()) if (typeof s === 'string') items.push([`overrides.json ${k}`, s]);
+}
 {
   // 렌더러는 코드와 섞여 있으므로 태그 사이 글자와 작은따옴표 문자열만 본다
   const src = readFileSync(join(ROOT, 'src/report/render.ts'), 'utf8');

@@ -9,7 +9,7 @@ import { STEM_TEXT, TG_TEXT, GROUP_THEME, EL_TEXT } from '../content/saju';
 import { elementBars, pairedBars, timelineChart, distBars, gauge, spark, elVar } from '../charts/charts';
 import { CONFIG } from '../config';
 import { base } from '../paths';
-import { VERDICT, VERDICT_EL, VERDICT_LABEL } from '../content/verdict';
+import { VERDICT, VERDICT_EL, VERDICT_META } from '../content/verdict';
 import { spriteFor } from '../content/breeds';
 import { DIST_DEEP, ADOPT_DEEP } from '../content/deep';
 export const breedLabel = (b: string, c: string) => (c ? `${b} · ${c}` : b);
@@ -68,7 +68,7 @@ export function verdictOf(m: Model): Verdict {
   const seed = Number(m.reportNo) + order.indexOf(m.adoption.primary) * 7 + EL_ORDER.indexOf(m.filled) * 3;
   const v = VERDICT[top][seed % VERDICT[top].length];
   const els = VERDICT_EL[m.filled];
-  return { label: VERDICT_LABEL, line1: v.me, line2: `"${v.msg}"고 말해주러 온 ${m.inp.dog}.`, line3: els[Math.floor(seed / 3) % els.length] };
+  return { label: VERDICT_META.label, line1: v.me, line2: `"${v.msg}"고 말해주러 온 ${m.inp.dog}.`, line3: els[Math.floor(seed / 3) % els.length] };
 }
 
 export function renderReport(m: Model, unlocked: boolean): { head: string; body: string; toc: { id: string; no: string; t: string; locked: boolean }[] } {

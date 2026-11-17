@@ -20,4 +20,6 @@ export const CONFIG = {
   contact: 'study_4ever@naver.com',
   seller: '놀이댕산',
   brand: '보호자사주',
+  /** 관리자 편집 페이지가 문구를 저장할 GitHub 저장소 */
+  repo: 'hubhub5/zoosa',
 };

@@ -5,7 +5,7 @@
 import type { DistId } from '../engine/distortion';
 import type { El } from '../saju/constants';
 
-export const VERDICT_LABEL = '왜 하필 그때였을까';
+export const VERDICT_META = { label: '왜 하필 그때였을까' };
 
 export const VERDICT: Record<DistId, { me: string; msg: string }[]> = {
   allOrNothing: [

@@ -1,3 +1,4 @@
+import '../content/overrides';
 import { initCommon } from '../common';
 import { decodeInputs, buildModel, type Model } from '../report/model';
 import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf, setVerdictOverride } from '../report/render';

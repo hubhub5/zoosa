@@ -32,6 +32,7 @@ export default defineConfig({
         terms: resolve(__dirname, 'terms.html'),
         refund: resolve(__dirname, 'refund.html'),
         privacy: resolve(__dirname, 'privacy.html'),
+        edit: resolve(__dirname, 'edit-b1ba3516.html'),
       },
       // 파일 이름은 해시로 바꾸고, 예전 HTML 이 없는 파일을 찾으면 partials/head.html 의 복구 스크립트가 새로 불러온다
     },
