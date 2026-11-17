@@ -17,7 +17,7 @@ export const CONFIG = {
     '3cbb8c8f0f150809bbcca2b3c0a674081613dc74e91c5c0f3cdae1c85b320a48', // 2026-11 추가 코드 4
     'f28303cf5cf8a61588192d1a13b9f291cb17200b569c9973eb1a80a0a412e7a9', // 2026-11 추가 코드 5
   ],
-  contact: 'hello@example.com',
-  seller: '판매자 이름(상호)',
+  contact: 'study_4ever@naver.com',
+  seller: '놀이댕산',
   brand: '보호자사주',
 };
