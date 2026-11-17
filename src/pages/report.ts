@@ -17,6 +17,8 @@ const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%
 const FIXED = document.body.dataset.fixed ?? '';
 if (FIXED && document.body.dataset.verdict) { try { setVerdictOverride(JSON.parse(document.body.dataset.verdict)); } catch { /* 잘못된 값이면 자동 문장 */ } }
 const hash = FIXED || (SAMPLE ? SAMPLE_HASH : location.hash.slice(1));
+// 리포트 창에서 다른 결과 링크를 열거나 뒤로 가기로 주소 뒤쪽(#)만 바뀌면 페이지가 새로 안 그려지므로 다시 불러온다
+if (!FIXED && !SAMPLE) addEventListener('hashchange', () => { if (!location.hash.startsWith('#s-')) location.reload(); });
 const inp = decodeInputs(hash);
 
 if (!inp) {

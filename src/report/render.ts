@@ -11,6 +11,7 @@ import { CONFIG } from '../config';
 import { base } from '../paths';
 import { VERDICT, VERDICT_EL, VERDICT_LABEL } from '../content/verdict';
 import { spriteFor } from '../content/breeds';
+import { DIST_DEEP, ADOPT_DEEP } from '../content/deep';
 export const breedLabel = (b: string, c: string) => (c ? `${b} · ${c}` : b);
 export const spriteKey = (b: string, c: string) => { const s = spriteFor(b, c); return `${s.breed}-${s.color}`; };
 
@@ -196,6 +197,8 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
           <div class="row"><span>세운 천간</span><span>${TG_KO[ad.yearTg]} ${TG_HANJA[ad.yearTg]} · ${TG_TEXT[ad.yearTg].words.slice(0, 3).join(', ')}</span></div>
           <div class="row"><span>세운 지지</span><span>${TG_KO[ad.yearBranchTg]} · ${TG_TEXT[ad.yearBranchTg].words.slice(0, 3).join(', ')}</span></div>
           <div class="row"><span>뭐가 바뀌었냐면</span><span><b>${prim.after}</b></span></div>
+          <div class="row"><span>남들한테 댄 이유</span><span>"${ADOPT_DEEP[ad.primary].said}"</span></div>
+          <div class="row"><span>한 겹 아래</span><span>${ADOPT_DEEP[ad.primary].real}</span></div>
         </div>
       </div>
     </div>
@@ -248,7 +251,7 @@ function shareBlock(m: Model, paid: boolean) {
       <canvas class="share-c" width="1080" height="1350" aria-label="공유 카드 미리보기"></canvas>
       <div class="share-a">
         <button class="btn" data-save>이미지로 저장</button>
-        <button class="btn ghost" data-copy>링크 복사</button>
+        <button class="btn ghost" data-copy>결과 링크 복사</button>
         <p class="mono mute fine">카드엔 생일 안 들어가요. 링크엔 입력한 정보가 들어 있으니까 단톡방 같은 데 올릴 땐 한 번 생각하고 올리기.</p>
       </div>
     </div>
@@ -264,7 +267,7 @@ function renderPaid(m: Model): string {
   // 04 입양 전후
   const et = EL_TEXT[m.filled];
   const dEls = [STEM_EL[m.dogPillar.s], BRANCH_EL[m.dogPillar.b]];
-  h += `<section class="sec">${sec('s-after', '04', `${josa(dog, '이', '가')} 오고 나서 바뀐 것`, '내 8글자 + 입양일 2글자')}
+  h += `<section class="sec">${sec('s-after', '04', `${esc(josa(dog, '이', '가'))} 오고 나서 바뀐 것`, '내 8글자 + 입양일 2글자')}
     <div class="dogp">
       <div class="dp-c"><span class="mono">${esc(dog)}의 기둥</span><b class="hz big">${pillarHanja(m.dogPillar)}</b><small>${pillarKo(m.dogPillar)} · ${BD ? (inp.adopt.d ? '생일 일주' : '생일 달 월주') : inp.adopt.d ? '온 날 일주' : '온 달 월주'}</small></div>
       <div class="dp-c"><span class="mono">들고 온 기운</span><b>${dEls.map((e) => `${elDot(e)}${EL_KO[e]}`).join(' ')}</b><small>${dEls.map((e) => EL_HANJA[e]).join(' · ')}</small></div>
@@ -319,7 +322,7 @@ function renderPaid(m: Model): string {
     <div class="scroll-x"><table class="tbl ytable">
       <thead><tr><th>연도</th><th>나이</th><th>세운</th><th>십성</th><th>단어</th><th>점수</th><th>조심할 달</th><th>좋은 달</th><th>${esc(dog)}</th></tr></thead>
       <tbody>${m.years.map((y) => {
-        const dl = y.dogClash ? `${josa(dog, '이랑', '랑')} 부딪히는 해. 이사나 환경 바뀌는 거 조심` : y.dogHarmony ? `${josa(dog, '이랑', '랑')} 합 맞는 해. 같이 잘 풀림` : TG_TEXT[y.tg].dog;
+        const dl = y.dogClash ? `${esc(josa(dog, '이랑', '랑'))} 부딪히는 해. 이사나 환경 바뀌는 거 조심` : y.dogHarmony ? `${esc(josa(dog, '이랑', '랑'))} 합 맞는 해. 같이 잘 풀림` : TG_TEXT[y.tg].dog;
         return `<tr class="${y.score < 45 ? 'low' : y.score >= 62 ? 'high' : ''}">
           <td class="mono">${y.year}</td><td>${y.age}</td><td><b class="hz">${pillarHanja(y.pillar)}</b></td>
           <td>${TG_KO[y.tg]}</td><td>${TG_TEXT[y.tg].tag}</td>
@@ -334,7 +337,7 @@ function renderPaid(m: Model): string {
   const excess = EL_ORDER.slice().sort((x, y) => a.elWeight[y] - a.elWeight[x])[0];
   const gives = [...new Set(dEls.flatMap((e) => EL_TEXT[e].gives))];
   const acts = [...new Set(dEls.map((e) => EL_TEXT[e].act))];
-  h += `<section class="sec">${sec('s-give', '08', `${josa(dog, '이랑', '랑')} 주고받는 것`)}
+  h += `<section class="sec">${sec('s-give', '08', `${esc(josa(dog, '이랑', '랑'))} 주고받는 것`)}
     <div class="signals">
       <div><h3>${esc(dog)}한테 받는 거</h3><ul>${gives.map((g) => `<li>${g}</li>`).join('')}<li>${ADOPT[m.adoption.primary].after.split('→')[1].trim()}</li></ul></div>
       <div><h3>${esc(dog)}한테 줄 거</h3><ul>${acts.map((g) => `<li>${g}</li>`).join('')}<li>${STEM_TEXT[chart.day.s].asOwner} 특유의 속도</li></ul></div>
@@ -371,6 +374,15 @@ function distCard(m: Model, id: keyof typeof DIST, rank: number, score: number, 
     </div>
     <h4>실제로는 이런 식</h4>
     ${c.scenes.map((s) => `<div class="scene"><span class="mono">${s.at}</span>${s.line}</div>`).join('')}
+    <h4>한 겹 더 들어가 보면</h4>
+    <div class="info deep">
+      <div class="row"><span>겉으로 대는 이유</span><span>"${DIST_DEEP[id].said}"</span></div>
+      <div class="row"><span>속을 뜯어보면</span><span><b>${DIST_DEEP[id].real}</b></span></div>
+      <div class="row"><span>억울할 수 있는데</span><span>${DIST_DEEP[id].fair}</span></div>
+      <div class="row"><span>비유하면</span><span>${DIST_DEEP[id].like}</span></div>
+      <div class="row"><span>확인하는 법</span><span>${DIST_DEEP[id].test}</span></div>
+      <div class="row"><span>기준 낮추기</span><span>${DIST_DEEP[id].bar}</span></div>
+    </div>
     <div class="note-box dogbox"><h3>${esc(josa(dog, '이', '가'))} 끊어주는 순간</h3>${c.dog.map((d) => `<p>${d.replace(/강아지는|강아지가|강아지한테|강아지와|강아지도|강아지 털/g, (w) => esc(dog) + (w === '강아지는' ? (hasBatchim(dog) ? '은' : '는') : w === '강아지가' ? (hasBatchim(dog) ? '이' : '가') : w === '강아지한테' ? '한테' : w === '강아지도' ? '도' : w === '강아지 털' ? ' 털' : (hasBatchim(dog) ? '과' : '와')))}</p>`).join('')}</div>
     <div class="talk"><div class="hd">원래 하던 말</div><div class="hd">이렇게 바꿔 말하면</div>${c.reframe.map((r) => `<div>${r.from}</div><div>${r.to}</div>`).join('')}</div>
   </article>`;

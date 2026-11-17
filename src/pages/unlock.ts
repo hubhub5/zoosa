@@ -29,8 +29,13 @@ f.addEventListener('submit', async (e) => {
   e.preventDefault();
   const v = input.value.trim();
   if (!v) { msg.className = 'ul-msg mono no'; msg.textContent = '코드부터 넣어 주세요.'; return; }
-  const ok = await tryUnlock(v);
-  if (ok) {
+  const r = await tryUnlock(v);
+  if (r === 'nostore') {
+    msg.className = 'ul-msg mono no';
+    msg.textContent = '코드는 맞는데 이 브라우저가 저장을 막고 있어요. 시크릿 창이나 앱 안 브라우저면 크롬·사파리로 열어서 다시 넣어 주세요.';
+    return;
+  }
+  if (r === 'ok') {
     msg.className = 'ul-msg mono ok';
     msg.textContent = '열렸어요. 리포트로 갈게요.';
     setTimeout(goReport, 700);
