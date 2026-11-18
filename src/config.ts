@@ -1,7 +1,7 @@
 // 판매 설정. 여기만 바꾸면 된다.
 export const CONFIG = {
-  /** 그로블 상품 페이지 주소 (상품 등록 후 교체) */
-  grobleUrl: 'https://www.groble.im/',
+  /** 그로블 상품 페이지 주소  */
+  grobleUrl: 'https://www.groble.im/products/qhU2SP',
   price: 9900,
   priceLabel: '9,900원',
   /**
