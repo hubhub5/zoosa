@@ -1,9 +1,10 @@
 import '../content/overrides';
 import { initCommon } from '../common';
+import { CONFIG } from '../config';
 import { decodeInputs, buildModel, type Model } from '../report/model';
 import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf, setVerdictOverride } from '../report/render';
 import { wireCharts } from '../charts/charts';
-import { isUnlocked, rememberReport, isPaidReport, buyUrl, markPending, autoPay, hasRef, checkPaid } from '../unlock';
+import { isUnlocked, rememberReport, isPaidReport, buyUrl, markPending, autoPay, hasRef, checkPaid, findPaid, keyIn, stripKey, importKey, keyLink } from '../unlock';
 import { pillarHanja, STEMS, BRANCHES, EL_HANJA, EL_KO } from '../saju/constants';
 import { ADOPT, ROUTE_KO } from '../content/adoption';
 import { DIST } from '../content/distortions';
@@ -17,7 +18,11 @@ const SAMPLE_HASH = 'o=%EA%B9%80%EC%98%88%EB%B9%88&b=19930821&t=0920&c=s&g=f&n=%
 // full-*.html: 관리자용. 페이지에 박힌 입력 한 건만 결제한 상태로 보여 준다 (사이트 어디에도 링크 없음)
 const FIXED = document.body.dataset.fixed ?? '';
 if (FIXED && document.body.dataset.verdict) { try { setVerdictOverride(JSON.parse(document.body.dataset.verdict)); } catch { /* 잘못된 값이면 자동 문장 */ } }
-const hash = FIXED || (SAMPLE ? SAMPLE_HASH : location.hash.slice(1));
+// 열쇠 링크(#...&k=zs_...)로 들어오면 열쇠를 저장하고 주소에서는 뺀다
+const rawHash = FIXED || (SAMPLE ? SAMPLE_HASH : location.hash.slice(1));
+const key = !FIXED && !SAMPLE ? keyIn(rawHash) : '';
+const hash = key ? stripKey(rawHash) : rawHash;
+if (key) { importKey(hash, key); history.replaceState(null, '', `#${hash}`); }
 // 리포트 창에서 다른 결과 링크를 열거나 뒤로 가기로 주소 뒤쪽(#)만 바뀌면 페이지가 새로 안 그려지므로 다시 불러온다
 if (!FIXED && !SAMPLE) addEventListener('hashchange', () => { if (!location.hash.startsWith('#s-')) location.reload(); });
 const inp = decodeInputs(hash);
@@ -51,25 +56,64 @@ if (!inp) {
     document.getElementById(a.getAttribute('href')!.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 
-  if (!unlocked && !SAMPLE && !FIXED) wireBuy();
+  if (!SAMPLE && !FIXED) wireBuy(unlocked);
   wireCharts(root);
   wireChecks(m);
   wireShare(m, unlocked);
 }
 
-/** 결제 버튼에 이 리포트 전용 참조값을 붙이고, 이미 결제했는데 안 열린 상태면(새 탭에서 결제 등) 조용히 확인해서 연다 */
-function wireBuy() {
-  const a = root.querySelector<HTMLAnchorElement>('[data-buy]');
-  if (a) {
-    a.href = buyUrl(hash);
-    if (autoPay()) { a.removeAttribute('target'); a.addEventListener('click', () => markPending(hash)); }
+/** 결제 버튼에 이 리포트 전용 참조값을 붙이고, 결제 여부를 서버에 확인한다 */
+function wireBuy(unlocked: boolean) {
+  if (!autoPay()) return;
+  const paidHere = isPaidReport(hash);
+  if (!unlocked) {
+    const a = root.querySelector<HTMLAnchorElement>('[data-buy]');
+    if (a) { a.href = buyUrl(hash); a.removeAttribute('target'); a.addEventListener('click', () => markPending(hash)); }
+    wireFind();
+    if (hasRef(hash)) {
+      // 결제했는데 아직 안 열린 상태(다른 탭에서 결제, 열쇠 링크로 들어옴 등)면 확인해서 연다
+      const recheck = () => { void checkPaid(hash).then((r) => { if (r === 'ok') location.reload(); }); };
+      recheck();
+      document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheck(); });
+    }
+    return;
   }
-  if (autoPay() && hasRef(hash)) {
-    const recheck = () => { void checkPaid(hash).then((r) => { if (r === 'ok') location.reload(); }); };
-    recheck();
-    // 다른 탭에서 결제하고 이 탭으로 돌아온 경우
-    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheck(); });
+  if (paidHere) {
+    // 결제로 열린 리포트: 환불됐으면 다음부터 잠기게 확인하고, 결과 링크에 열쇠를 넣는다
+    void checkPaid(hash);
+    const copy = root.querySelector<HTMLButtonElement>('[data-copy]');
+    copy?.setAttribute('data-key', '1');
+    const note = copy?.parentElement?.querySelector('.fine');
+    if (note) note.textContent = '결과 링크엔 이 리포트를 여는 열쇠가 들어 있어요. 카톡 나에게 보내기로 저장해 두면 폰이든 노트북이든 다시 열 수 있어요. 남한테 보내면 그 사람도 이 리포트를 다 보게 되니 조심하기.';
   }
+}
+
+/** 잠긴 리포트: 이미 결제했으면 결제한 번호로 다시 열기 */
+function wireFind() {
+  const box = root.querySelector<HTMLElement>('[data-find]');
+  if (!box) return;
+  box.hidden = false;
+  const f = box.querySelector('form')!;
+  const inp = f.querySelector('input')!;
+  const btn = f.querySelector('button')!;
+  const msg = box.querySelector<HTMLElement>('[data-find-msg]')!;
+  const say = (ok: boolean, t: string) => { msg.className = `mono fine ${ok ? 'ok' : 'no'}`; msg.textContent = t; };
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!inp.value.trim()) { say(false, '결제할 때 쓴 휴대폰 번호를 넣어 주세요.'); return; }
+    btn.disabled = true; say(true, '결제 내역 찾는 중이에요.');
+    const r = await findPaid(hash, inp.value);
+    btn.disabled = false;
+    if (r === 'ok') { say(true, '찾았어요. 열게요.'); setTimeout(() => location.reload(), 500); return; }
+    say(false, {
+      notfound: '이 번호로 결제한 내역이 안 보여요. 결제 직후면 1분쯤 뒤에 다시 해 보세요.',
+      other: '이 번호로 결제한 리포트는 있는데, 지금 이 리포트와 입력값이 달라요. 결제할 때와 똑같이(이름, 생일, 시각, 강아지 정보) 입력했는지 봐 주세요. 리포트는 마리마다 따로 결제예요.',
+      format: '010으로 시작하는 휴대폰 번호나 메일로 넣어 주세요.',
+      many: '여러 번 시도해서 잠깐 막혔어요. 10분 뒤에 다시 해 주세요.',
+      nostore: '찾았는데 이 브라우저가 저장을 막고 있어요. 시크릿 창이면 일반 창에서 열어 주세요.',
+      error: '결제 확인 서버에 연결이 안 돼요. 잠시 뒤 다시 해 주세요.',
+    }[r] + (r === 'notfound' || r === 'error' ? ` 계속 안 되면 ${CONFIG.contact}로 결제 내역 캡처를 보내 주세요.` : ''));
+  });
 }
 
 function wireChecks(m: Model) {
@@ -173,7 +217,8 @@ function wireShare(m: Model, paid: boolean) {
   });
   root.querySelector('[data-copy]')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget as HTMLButtonElement;
-    try { await navigator.clipboard.writeText(location.href); btn.textContent = '복사됨'; } catch { btn.textContent = '복사 실패'; }
+    const url = btn.dataset.key ? keyLink(hash) : location.href;
+    try { await navigator.clipboard.writeText(url); btn.textContent = '복사됨'; } catch { btn.textContent = '복사 실패'; }
     setTimeout(() => { btn.textContent = '결과 링크 복사'; }, 1600);
   });
 }

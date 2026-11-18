@@ -1,11 +1,13 @@
 name = "zoosa-paid"
 main = "src/index.js"
-compatibility_date = "2026-10-01"
+compatibility_date = "2026-05-01"
 
 [vars]
 ALLOWED_ORIGIN = "https://hubhub5.github.io"
 
-# npx wrangler kv namespace create KV 로 만든 id 를 넣는다
-[[kv_namespaces]]
-binding = "KV"
-id = "3bc9f93df855428492db0b696cd19087"
+
+# npx wrangler d1 create zoosa-paid 로 만든 id
+[[d1_databases]]
+binding = "DB"
+database_name = "zoosa-paid"
+database_id = "51382bf3-2e19-4164-8760-68ea6b0062c2"

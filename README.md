@@ -71,15 +71,20 @@ OG 이미지(`public/og.png`)는 글꼴이 들어가서 브라우저에서 만�
 
 ## 결제 확인 서버 (그로블 웹훅)
 
-`worker/` 는 Cloudflare Workers 에 올리는 작은 서버다.
+`worker/` 는 Cloudflare Workers + D1 에 올린 작은 서버다. 주소: https://zoosa-paid.study-4ever.workers.dev
 
-흐름: 리포트마다 랜덤 참조값(zs_...)을 만들어 결제창 링크에 `?ref=` 로 붙임 → 그로블 웹훅 `payment.completed` 의 `sellerReference` 로 돌아옴 → 서버가 기록 → 그로블 '결제 후 이동 페이지'(`unlock.html?paid=1`)로 돌아온 사이트가 `/check` 로 확인하고 그 리포트만 연다. 환불(`payment.refunded`)이 오면 다시 잠근다. 구매자 이름·이메일·번호는 저장하지 않는다.
+흐름
+- 리포트마다 랜덤 참조값(zs_...)을 만들어 그로블 결제창(g4wFTv) 링크에 `?ref=` 로 붙인다.
+- 결제되면 웹훅 `payment.completed` 의 `sellerReference` 로 돌아오고, 서버가 기록한다 (구매자 번호·메일은 해시로만).
+- 그로블 이동 페이지(`unlock.html?paid=1`)로 돌아온 사이트가 `/check {ref, rid}` 로 확인하고 그 리포트를 연다. rid 는 입력값 해시라서 결제 1건 = 리포트 1개(마리마다 결제).
+- 다른 기기: 결과 링크 복사(열쇠 `&k=` 포함)로 열거나, 같은 정보 입력 후 "이미 결제했어요"에 결제한 번호 → `/find`.
+- 환불(결제 취소 완료, `payment.refunded`)이 오면 잠그고, 다음에 리포트를 열 때 브라우저의 열림 표시도 지운다.
 
-1. `npx -y wrangler@4.86.0 login` 후 `bash worker/setup.sh`
-2. 그로블 내 스토어 → 연동: 웹훅 주소 `<workers.dev 주소>/hook`, 이벤트 payment.completed, payment.refunded
-3. 그로블이 준 시크릿 키를 복사한 상태에서 `cd worker && pbpaste | npx -y wrangler@4.86.0 secret put GROBLE_SECRET`
-4. 그로블 상품 → 판매하기 → 이동 페이지: `https://hubhub5.github.io/zoosa/unlock.html?paid=1`
-5. `src/config.ts` 의 `groblePayUrl`(결제창 링크), `paidApi`(workers.dev 주소) 채우고 배포
-6. 웹훅 모양 확인: `<workers.dev 주소>/shapes/<worker/.shapes_key 값>`
+관리
+- 웹훅 모양 확인: `<서버 주소>/shapes/<worker/.shapes_key 값>` (개인정보 가림)
+- 그로블 웹훅 키를 재발급하면: 키 복사 후 `cd worker && pbpaste | npx -y wrangler@4.86.0 secret put GROBLE_SECRET`
+- 서버 코드 수정 후: `cd worker && npx -y wrangler@4.86.0 deploy` (GitHub 푸시로는 서버가 안 바뀐다)
+- 새 계정으로 옮길 때: `bash worker/setup.sh`
+- 무료 한도: D1 하루 쓰기 10만 행. 결제 1건에 몇 행이라 하루 수천 건도 괜찮다.
 
-둘 중 하나라도 비어 있으면 예전 코드 방식 그대로 동작한다. 코드(지인용·판매용)는 계속 쓸 수 있다.
+`src/config.ts` 의 `groblePayUrl`, `paidApi` 를 비우면 예전 코드 방식으로 돌아간다. 코드(지인용·판매용)는 계속 쓸 수 있다.

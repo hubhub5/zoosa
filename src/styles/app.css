@@ -243,3 +243,11 @@ input, select, textarea, button, svg text { font-family: var(--sans); }
 .verdict small { display: block; margin-top: 8px; font-size: 14px; color: var(--ink-2); }
 .dcard-x .info.deep { margin: 8px 0 4px; }
 .dcard-x .info.deep .row > span:first-child { white-space: nowrap; }
+
+/* 잠긴 리포트: 이미 결제했어요 (결제한 번호로 다시 열기) */
+.find { margin-top: 18px; border-top: 1px solid var(--line, currentColor); padding-top: 12px; }
+.find summary { cursor: pointer; font-size: 13px; }
+.find-f { display: grid; grid-template-columns: 1fr auto; gap: 8px; margin-top: 10px; }
+.find-f input { font: inherit; font-size: 16px; height: 48px; padding: 0 12px; border: 1px solid var(--ink); background: var(--paper); color: var(--ink); min-width: 0; border-radius: 0; }
+.find .ok { color: var(--el-wood); } .find .no { color: var(--accent-ink); }
+@media (max-width: 480px) { .find-f { grid-template-columns: 1fr; } }

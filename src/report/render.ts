@@ -233,7 +233,16 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
         <a class="btn ghost" href="${base}unlock.html">코드 있어요</a>
         <a class="wl lock-sample" href="${base}sample.html">결제하면 어떻게 나오는지 예시 먼저 볼래요</a>
       </div>
-      <p class="mono mute fine">${autoPay() ? '그로블에서 결제하면 이 리포트로 돌아와서 바로 열려요. 코드 넣을 필요 없어요. 입력한 정보는 어디에도 저장 안 돼요.' : '그로블에서 결제하면 코드가 바로 와요. 한 번 넣으면 이 브라우저에선 계속 열려 있고, 입력한 정보는 어디에도 저장 안 돼요.'}</p>
+      <details class="find" data-find hidden>
+        <summary class="mono">이미 결제했어요 (다른 기기·브라우저에서 보는 중)</summary>
+        <p class="mono mute fine">결제할 때와 똑같이 입력한 리포트에서, 결제할 때 쓴 휴대폰 번호를 넣으면 열려요.</p>
+        <form class="ul-form find-f" novalidate>
+          <input name="id" inputmode="tel" autocomplete="tel" placeholder="010-0000-0000" aria-label="결제할 때 쓴 휴대폰 번호">
+          <button class="btn" type="submit">열기</button>
+        </form>
+        <p class="mono fine" data-find-msg role="status"></p>
+      </details>
+      <p class="mono mute fine">${autoPay() ? '그로블에서 결제하면 이 리포트로 돌아와서 바로 열려요. 코드 넣을 필요 없어요. 생일 같은 입력 정보는 원문 그대로 저장되지 않아요.' : '그로블에서 결제하면 코드가 바로 와요. 한 번 넣으면 이 브라우저에선 계속 열려 있고, 입력한 정보는 어디에도 저장 안 돼요.'}</p>
     </section>`;
   } else {
     body += renderPaid(m);
