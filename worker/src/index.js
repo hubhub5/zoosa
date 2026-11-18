@@ -1,27 +1,34 @@
 // 보호자사주 결제 확인 서버 (Cloudflare Workers)
 //
-// POST /hook/<HOOK_SECRET>   그로블 웹훅이 결제 알림을 보내는 곳
-// POST /check                사이트가 "이 이메일/전화번호 결제했나요?" 묻는 곳
-// GET  /shapes/<HOOK_SECRET> 최근 웹훅 모양(개인정보 가린 것) 보기. 처음 연결할 때 확인용
+// 흐름: 사이트가 리포트마다 랜덤 참조값(zs_...)을 만들어 그로블 결제 링크 뒤에 ?ref= 로 붙인다
+//   → 결제되면 그로블이 웹훅(payment.completed)에 그 값을 sellerReference 로 돌려준다
+//   → 서버가 "이 참조값 결제됨"을 기록한다
+//   → 결제 후 이동 페이지로 돌아온 사이트가 /check 로 물어보고 그 리포트를 연다
 //
-// 이메일·전화번호 원문은 저장하지 않는다. HOOK_SECRET 을 섞은 해시만 저장한다.
-// 비밀값(wrangler secret put): HOOK_SECRET, PAID_CODE
-// 설정값(wrangler.toml [vars]): ALLOWED_ORIGIN, PRODUCT_KEY
+// POST /hook                 그로블 웹훅 (X-Groble-Signature 로 진짜인지 확인)
+// POST /check  {ref}         결제됐는지
+// GET  /shapes/<SHAPES_KEY>  최근 웹훅 모양(개인정보 가림). 연결 확인용
+//
+// 비밀값(wrangler secret put): GROBLE_SECRET (그로블 웹훅 등록 때 받은 키), SHAPES_KEY
+// 설정값(wrangler.toml [vars]): ALLOWED_ORIGIN
+// 이름·이메일·전화번호는 저장하지 않는다.
 
 const JSONH = { 'content-type': 'application/json; charset=utf-8' };
+const REF_RE = /^zs_[A-Za-z0-9_-]{16,64}$/;
+const YEAR = 60 * 60 * 24 * 365;
 
 export default {
   async fetch(req, env) {
-    const url = new URL(req.url);
-    const p = url.pathname;
+    const p = new URL(req.url).pathname;
     try {
       if (req.method === 'OPTIONS') return new Response(null, { headers: cors(req, env) });
-      if (req.method === 'POST' && p === `/hook/${env.HOOK_SECRET}`) return await hook(req, env);
+      if (req.method === 'POST' && p === '/hook') return await hook(req, env);
       if (req.method === 'POST' && p === '/check') return await check(req, env);
-      if (req.method === 'GET' && p === `/shapes/${env.HOOK_SECRET}`) return await shapes(env);
+      if (req.method === 'GET' && env.SHAPES_KEY && p === `/shapes/${env.SHAPES_KEY}`) return await shapes(env);
       if (p === '/') return new Response('ok');
       return new Response('not found', { status: 404 });
-    } catch (e) {
+    } catch {
+      // 500 이면 그로블이 다시 보내 준다
       return new Response(JSON.stringify({ ok: false, error: 'server' }), { status: 500, headers: { ...JSONH, ...cors(req, env) } });
     }
   },
@@ -31,44 +38,48 @@ export default {
 
 async function hook(req, env) {
   const raw = await req.text();
-  let body;
-  try { body = JSON.parse(raw); } catch { body = Object.fromEntries(new URLSearchParams(raw)); }
+  if (!env.GROBLE_SECRET) return new Response('secret not set', { status: 503 }); // 키 넣기 전이면 나중에 다시 보내게
+  if (!(await verify(req.headers, raw, env.GROBLE_SECRET))) return new Response('bad signature', { status: 401 });
 
-  // 처음 연결할 때 어떤 값이 오는지 보려고 모양만 남긴다 (개인정보는 가림, 7일 뒤 삭제)
-  await env.KV.put(`shape:${Date.now()}`, JSON.stringify(redact(body)), { expirationTtl: 60 * 60 * 24 * 7 });
+  const ev = JSON.parse(raw);
+  const o = ev?.data?.object ?? {};
+  await env.KV.put(`shape:${Date.now()}`, JSON.stringify(redact(ev)), { expirationTtl: 60 * 60 * 24 * 14 });
 
-  // 다른 상품 알림이면 무시 (PRODUCT_KEY 가 비어 있으면 모든 상품을 받는다)
-  if (env.PRODUCT_KEY && !raw.includes(env.PRODUCT_KEY)) return new Response('ignored: product');
-
-  const ids = collectIds(body);
-  if (!ids.length) return new Response('ignored: no buyer id');
-
-  const cancelled = isCancel(body);
-  for (const id of ids) {
-    const k = `paid:${await sha(env.HOOK_SECRET + ':' + id)}`;
-    if (cancelled) await env.KV.delete(k);
-    else await env.KV.put(k, String(Date.now()));
+  const uid = typeof o.merchantUid === 'string' ? o.merchantUid : '';
+  if (ev.type === 'payment.completed') {
+    const ref = typeof o.sellerReference === 'string' ? o.sellerReference : '';
+    if (!REF_RE.test(ref)) return new Response('ignored: no ref'); // 다른 상품이거나 사이트를 안 거친 결제
+    await env.KV.put(`paid:${ref}`, JSON.stringify({ uid, at: ev.occurredAt ?? '' }), { expirationTtl: YEAR * 3 });
+    if (uid) await env.KV.put(`uid:${uid}`, ref, { expirationTtl: YEAR * 3 });
+    return new Response('saved');
   }
-  return new Response(cancelled ? 'cancelled' : 'saved');
+  if (ev.type === 'payment.refunded') {
+    // 환불 알림에는 참조값이 안 와서, 결제 때 적어 둔 merchantUid 로 찾는다
+    const ref = uid ? await env.KV.get(`uid:${uid}`) : null;
+    if (ref) await env.KV.delete(`paid:${ref}`);
+    return new Response(ref ? 'refunded' : 'ignored: unknown uid');
+  }
+  return new Response('ignored: ' + String(ev.type));
+}
+
+/** HMAC-SHA256(secret, `${timestamp}.${raw}`) hex. 키 교체 중엔 이전 키 서명도 받는다. 5분 넘은 요청은 거절 */
+export async function verify(headers, raw, secret, now = Date.now()) {
+  const ts = headers.get('x-groble-timestamp') || '';
+  if (!/^\d+$/.test(ts) || Math.abs(now / 1000 - Number(ts)) > 300) return false;
+  const want = await hmac(secret, `${ts}.${raw}`);
+  return [headers.get('x-groble-signature'), headers.get('x-groble-signature-previous')]
+    .some((s) => s && safeEq(s.trim().toLowerCase().replace(/^sha256=/, ''), want));
 }
 
 /* ---------- 사이트 → 서버 ---------- */
 
 async function check(req, env) {
   const h = { ...JSONH, ...cors(req, env) };
-  // 남의 번호로 결제 여부를 찔러 보는 걸 막는다: IP 하나당 10분에 10번
-  const ip = req.headers.get('cf-connecting-ip') || 'x';
-  const rk = `rl:${ip}:${Math.floor(Date.now() / 600000)}`;
-  const n = Number((await env.KV.get(rk)) || 0);
-  if (n >= 10) return new Response(JSON.stringify({ ok: false, error: 'many' }), { status: 429, headers: h });
-  await env.KV.put(rk, String(n + 1), { expirationTtl: 900 });
-
-  let id = '';
-  try { id = normId(String((await req.json()).id || '')); } catch { /* 빈 값 */ }
-  if (!id) return new Response(JSON.stringify({ ok: false, error: 'format' }), { status: 400, headers: h });
-
-  const paid = await env.KV.get(`paid:${await sha(env.HOOK_SECRET + ':' + id)}`);
-  return new Response(JSON.stringify(paid ? { ok: true, code: env.PAID_CODE } : { ok: false, error: 'notfound' }), { headers: h });
+  let ref = '';
+  try { ref = String((await req.json()).ref || ''); } catch { /* 빈 값 */ }
+  if (!REF_RE.test(ref)) return new Response(JSON.stringify({ ok: false, error: 'format' }), { status: 400, headers: h });
+  const paid = await env.KV.get(`paid:${ref}`);
+  return new Response(JSON.stringify({ ok: !!paid }), { headers: h });
 }
 
 async function shapes(env) {
@@ -80,62 +91,29 @@ async function shapes(env) {
 
 /* ---------- 도우미 ---------- */
 
-export function normId(s) {
-  const t = s.trim().toLowerCase();
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return t;
-  let d = t.replace(/\D/g, '');
-  if (d.startsWith('82')) d = '0' + d.slice(2);
-  if (/^01\d{8,9}$/.test(d)) return d;
-  return '';
-}
-
-/** 웹훅 본문 어디에 있든 이메일·휴대폰 번호를 다 찾는다 (그로블이 어떤 키 이름을 쓰는지 몰라도 되게) */
-export function collectIds(body) {
-  const out = new Set();
-  const walk = (v) => {
-    if (v == null) return;
-    if (typeof v === 'string' || typeof v === 'number') {
-      const s = String(v);
-      for (const m of s.match(/[^\s@"',;<>]+@[^\s@"',;<>]+\.[a-z]{2,}/gi) || []) { const n = normId(m); if (n) out.add(n); }
-      for (const m of s.match(/(?:\+?82[-\s]?|0)1\d[-\s]?\d{3,4}[-\s]?\d{4}/g) || []) { const n = normId(m); if (n) out.add(n); }
-      return;
-    }
-    if (Array.isArray(v)) { v.forEach(walk); return; }
-    if (typeof v === 'object') Object.values(v).forEach(walk);
-  };
-  walk(body);
-  return [...out];
-}
-
-/** status·event·type 같은 칸에 취소·환불이 적혀 있으면 취소 알림으로 본다 */
-export function isCancel(body) {
-  let hit = false;
-  const walk = (v, key = '') => {
-    if (hit || v == null) return;
-    if (typeof v === 'object') { for (const [k, x] of Object.entries(v)) walk(x, k); return; }
-    if (/status|event|type|state/i.test(key) && /cancel|refund|취소|환불/i.test(String(v))) hit = true;
-  };
-  walk(body);
-  return hit;
-}
-
-/** 값은 가리고 키 이름과 종류만 남긴다 */
+/** 값은 가리고 키 이름과 종류만 남긴다. 상태·상품·참조값처럼 개인정보가 아닌 칸만 그대로 */
 export function redact(v, key = '') {
   if (v == null) return v;
   if (Array.isArray(v)) return v.slice(0, 5).map((x) => redact(x, key));
   if (typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, redact(x, `${key}.${k}`)]));
   if (typeof v === 'number' || typeof v === 'boolean') return typeof v;
   const s = String(v);
-  if (/@/.test(s)) return '<이메일>';
-  if (/^[\d\s+-]{9,}$/.test(s)) return `<숫자 ${s.replace(/\D/g, '').length}자리>`;
-  // 상태·이벤트·상품 칸의 짧은 영문 값(paid, cancel, 상품 ID)만 그대로. 이름일 수 있는 건 가린다
-  if (!/name|buyer|user|customer|member/i.test(key) && /status|event|type|state|product|item|code/i.test(key) && /^[A-Za-z0-9_.:-]{1,40}$/.test(s)) return s;
+  if (/buyer|shipping|question|paymentMethod/i.test(key)) return `<가림 ${s.length}자>`;
+  if (/(^\.type|version|occurredAt|merchantUid|sellerReference|content\.(id|type|title|paymentType)|currency)$/i.test(key)) return s;
   return `<글자 ${s.length}자>`;
 }
 
-async function sha(s) {
-  const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-  return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join('');
+async function hmac(secret, msg) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(msg));
+  return [...new Uint8Array(sig)].map((x) => x.toString(16).padStart(2, '0')).join('');
+}
+
+function safeEq(a, b) {
+  if (a.length !== b.length) return false;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
 }
 
 function cors(req, env) {

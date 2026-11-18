@@ -1,30 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { normId, collectIds, isCancel, redact } from './src/index.js';
-
-describe('결제 확인 서버', () => {
-  it('이메일·전화번호를 같은 모양으로 맞춘다', () => {
-    expect(normId(' Kim@Naver.com ')).toBe('kim@naver.com');
-    expect(normId('010-1234-5678')).toBe('01012345678');
-    expect(normId('+82 10 1234 5678')).toBe('01012345678');
-    expect(normId('1234')).toBe('');
-  });
-  it('웹훅 본문 어디에 있든 구매자 연락처를 찾는다', () => {
-    const body = { event: 'payment.completed', data: { buyer: { name: '홍길동', email: 'a@b.co', phone: '010-9999-0000' }, product: { id: 'qhU2SP' }, amount: 9900 } };
-    expect(collectIds(body).sort()).toEqual(['01099990000', 'a@b.co']);
-  });
-  it('취소·환불 알림을 알아본다', () => {
-    expect(isCancel({ event: 'payment.cancelled' })).toBe(true);
-    expect(isCancel({ data: { status: '환불완료' } })).toBe(true);
-    expect(isCancel({ event: 'payment.completed', memo: '환불 문의' })).toBe(false);
-  });
-  it('모양 기록에는 개인정보가 안 남는다', () => {
-    const r = JSON.stringify(redact({ event: 'paid', buyer: { name: 'Kim', email: 'a@b.co', phone: '01099990000' }, product: { id: 'qhU2SP' } }));
-    expect(r).not.toMatch(/Kim|a@b|0109999/);
-    expect(r).toMatch(/qhU2SP/);
-  });
-});
-
-import worker from './src/index.js';
+import { createHmac } from 'node:crypto';
+import worker, { verify, redact } from './src/index.js';
 
 function fakeKV() {
   const m = new Map();
@@ -36,32 +12,62 @@ function fakeKV() {
     list: async ({ prefix }) => ({ keys: [...m.keys()].filter((k) => k.startsWith(prefix)).map((name) => ({ name })) }),
   };
 }
-const env = () => ({ KV: fakeKV(), HOOK_SECRET: 'sec', PAID_CODE: 'PAIDX-1111', ALLOWED_ORIGIN: 'https://hubhub5.github.io', PRODUCT_KEY: 'qhU2SP' });
-const call = (e, path, body, ip = '1.1.1.1') => worker.fetch(new Request(`https://w.dev${path}`, { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hubhub5.github.io', 'cf-connecting-ip': ip }, body: JSON.stringify(body) }), e);
+const SECRET = 'whsec_test';
+const env = () => ({ KV: fakeKV(), GROBLE_SECRET: SECRET, SHAPES_KEY: 'sk', ALLOWED_ORIGIN: 'https://hubhub5.github.io' });
+const REF = 'zs_abcdefghijklmnop1234';
 
-describe('결제 확인 흐름', () => {
-  it('결제 알림 → 확인 → 취소', async () => {
+function signed(body, { secret = SECRET, ts = Math.floor(Date.now() / 1000) } = {}) {
+  const raw = JSON.stringify(body);
+  const sig = createHmac('sha256', secret).update(`${ts}.${raw}`).digest('hex');
+  return new Request('https://w.dev/hook', { method: 'POST', headers: { 'content-type': 'application/json', 'x-groble-signature': sig, 'x-groble-timestamp': String(ts) }, body: raw });
+}
+const check = (e, ref) => worker.fetch(new Request('https://w.dev/check', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://hubhub5.github.io' }, body: JSON.stringify({ ref }) }), e);
+
+const completed = (ref = REF, uid = 'm_1') => ({
+  id: 'evt_1', type: 'payment.completed', version: '2026-04-30', occurredAt: '2026-11-18T10:00:00+09:00',
+  data: { object: { merchantUid: uid, sellerReference: ref, buyer: { type: 'MEMBER', displayName: '테스트 구매자', email: 'test@buyer.example', phoneNumber: '01012345678' }, content: { id: 'qhU2SP', title: '보호자 사주' }, pricing: { finalAmount: 9900, currency: 'KRW' } } },
+});
+
+describe('결제 확인 서버', () => {
+  it('결제 → 확인 → 환불하면 다시 잠김', async () => {
     const e = env();
-    const paid = { event: 'payment.completed', data: { buyer: { email: 'Kim@naver.com', phone: '010-1234-5678' }, product: { id: 'qhU2SP' } } };
-    expect(await (await call(e, '/hook/sec', paid)).text()).toBe('saved');
-    // 원문 이메일·번호는 저장 안 됨
-    expect([...e.KV.m.keys()].join()).not.toMatch(/kim|0101234/);
-    const r = await call(e, '/check', { id: '01012345678' });
+    expect((await (await check(e, REF)).json()).ok).toBe(false);
+    expect(await (await worker.fetch(signed(completed()), e)).text()).toBe('saved');
+    const r = await check(e, REF);
     expect(r.headers.get('access-control-allow-origin')).toBe('https://hubhub5.github.io');
-    expect(await r.json()).toEqual({ ok: true, code: 'PAIDX-1111' });
-    expect(await (await call(e, '/check', { id: 'kim@NAVER.com' })).json()).toEqual({ ok: true, code: 'PAIDX-1111' });
-    expect((await (await call(e, '/check', { id: 'other@naver.com' })).json()).ok).toBe(false);
-    await call(e, '/hook/sec', { ...paid, event: 'payment.cancelled' });
-    expect((await (await call(e, '/check', { id: '01012345678' })).json()).ok).toBe(false);
+    expect((await r.json()).ok).toBe(true);
+    expect((await (await check(e, 'zs_someoneelse12345678')).json()).ok).toBe(false);
+    const refunded = { id: 'evt_2', type: 'payment.refunded', data: { object: { merchantUid: 'm_1', refund: { amount: 9900 } } } };
+    expect(await (await worker.fetch(signed(refunded), e)).text()).toBe('refunded');
+    expect((await (await check(e, REF)).json()).ok).toBe(false);
   });
-  it('비밀 주소가 틀리거나 다른 상품이면 무시', async () => {
+  it('서명이 틀리거나 오래된 알림은 거절', async () => {
     const e = env();
-    expect((await call(e, '/hook/wrong', { email: 'a@b.co', product: 'qhU2SP' })).status).toBe(404);
-    expect(await (await call(e, '/hook/sec', { email: 'a@b.co', product: 'other' })).text()).toBe('ignored: product');
+    expect((await worker.fetch(signed(completed(), { secret: 'wrong' }), e)).status).toBe(401);
+    expect((await worker.fetch(signed(completed(), { ts: Math.floor(Date.now() / 1000) - 600 }), e)).status).toBe(401);
+    expect((await (await check(e, REF)).json()).ok).toBe(false);
   });
-  it('한 IP에서 10번 넘게 물으면 막는다', async () => {
+  it('키 교체 중엔 이전 키 서명도 받는다', async () => {
+    const ts = String(Math.floor(Date.now() / 1000));
+    const raw = '{}';
+    const h = new Headers({ 'x-groble-timestamp': ts, 'x-groble-signature': 'nope', 'x-groble-signature-previous': createHmac('sha256', 'old').update(`${ts}.${raw}`).digest('hex') });
+    expect(await verify(h, raw, 'old')).toBe(true);
+  });
+  it('사이트를 안 거친 결제(참조값 없음)는 기록 안 함', async () => {
     const e = env();
-    for (let i = 0; i < 10; i++) await call(e, '/check', { id: 'a@b.co' });
-    expect((await call(e, '/check', { id: 'a@b.co' })).status).toBe(429);
+    const b = completed(); delete b.data.object.sellerReference;
+    expect(await (await worker.fetch(signed(b), e)).text()).toBe('ignored: no ref');
+    expect([...e.KV.m.keys()].some((k) => k.startsWith('paid:'))).toBe(false);
+  });
+  it('키 넣기 전이면 503 (그로블이 나중에 다시 보냄)', async () => {
+    const e = env(); delete e.GROBLE_SECRET;
+    expect((await worker.fetch(signed(completed()), e)).status).toBe(503);
+  });
+  it('저장된 것에 이름·이메일·전화번호가 없다', async () => {
+    const e = env();
+    await worker.fetch(signed(completed()), e);
+    const all = JSON.stringify([...e.KV.m.entries()]);
+    expect(all).not.toMatch(/테스트 구매자|test@buyer|01012345678/);
+    expect(JSON.stringify(redact(completed()))).toMatch(/zs_abcdefghijklmnop1234/);
   });
 });

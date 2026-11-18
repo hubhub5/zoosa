@@ -16,13 +16,18 @@ export const CONFIG = {
     '2bfa7682deb46a98852efc532fb9fa674b834aa97971e3aebfbda33f6fa8a131', // 2026-11 추가 코드 3
     '3cbb8c8f0f150809bbcca2b3c0a674081613dc74e91c5c0f3cdae1c85b320a48', // 2026-11 추가 코드 4
     'f28303cf5cf8a61588192d1a13b9f291cb17200b569c9973eb1a80a0a412e7a9', // 2026-11 추가 코드 5
-    '1675c31ecff8bd64123dde4a5633e5a09bf0ea8ba81898bb3a742a48e253e765', // 웹훅 결제 확인용 (원문은 서버 비밀값 PAID_CODE에만 있음)
   ],
   contact: 'study_4ever@naver.com',
   seller: '놀이댕산',
   brand: '보호자사주',
   /** 관리자 편집 페이지가 문구를 저장할 GitHub 저장소 */
   repo: 'hubhub5/zoosa',
-  /** 결제 확인 서버 주소 (worker/ 배포 후 넣기). 비어 있으면 '결제했어요' 칸을 숨긴다 */
+  /**
+   * 자동 결제 확인. 둘 다 채워야 켜진다 (비어 있으면 코드 방식만)
+   * groblePayUrl: 그로블 결제창 링크 (상품 관리 → 링크 복사, groble.im/payment/...). 뒤에 ?ref= 를 붙여 보낸다
+   * paidApi: 결제 확인 서버 주소 (worker/ 배포 후 나온 workers.dev 주소)
+   * 그로블 '결제 후 이동 페이지'에는 https://hubhub5.github.io/zoosa/unlock.html?paid=1 을 넣는다
+   */
+  groblePayUrl: '',
   paidApi: '',
 };

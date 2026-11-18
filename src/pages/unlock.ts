@@ -1,6 +1,6 @@
 import { initCommon } from '../common';
 import '../styles/form.css';
-import { tryUnlock, isUnlocked, lastReport } from '../unlock';
+import { tryUnlock, isUnlocked, lastReport, pendingReport, autoPay, hasRef, checkPaid } from '../unlock';
 import { CONFIG } from '../config';
 
 initCommon();
@@ -49,37 +49,22 @@ f.addEventListener('submit', (e) => {
   void openWith(v);
 });
 
-// 결제했어요: 결제 확인 서버에 이메일·전화번호로 물어본다
-if (CONFIG.paidApi) {
-  document.querySelector<HTMLElement>('[data-paid]')!.hidden = false;
-  document.querySelector<HTMLElement>('[data-nocode]')!.innerHTML = `코드 없어도 돼요. <a class="wl" href="${CONFIG.grobleUrl}" target="_blank" rel="noopener">그로블에서 결제</a>하고 위 칸에 결제할 때 쓴 이메일이나 번호를 넣으면 열려요.`;
-  const pf = document.querySelector<HTMLFormElement>('[data-paid-form]')!;
-  const pin = pf.querySelector<HTMLInputElement>('input')!;
-  const pbtn = pf.querySelector<HTMLButtonElement>('button')!;
-  pf.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const id = pin.value.trim();
-    if (!id) { say(false, '결제할 때 쓴 이메일이나 휴대폰 번호를 넣어 주세요.'); return; }
-    pbtn.disabled = true;
-    say(true, '결제 확인하는 중이에요.');
-    try {
-      const res = await fetch(`${CONFIG.paidApi}/check`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) });
-      const j = await res.json() as { ok: boolean; code?: string; error?: string };
-      if (j.ok && j.code) await openWith(j.code);
-      else if (j.error === 'format') say(false, '이메일이나 010으로 시작하는 번호로 넣어 주세요.');
-      else if (j.error === 'many') say(false, '여러 번 시도해서 잠깐 막혔어요. 10분 뒤에 다시 해 주세요.');
-      else say(false, `결제 내역이 아직 안 보여요. 결제 직후면 1분쯤 뒤에 다시 눌러 주세요. 계속 안 되면 ${CONFIG.contact}로 결제 내역 캡처를 보내 주세요.`);
-    } catch {
-      say(false, `결제 확인 서버에 연결이 안 돼요. 잠시 뒤 다시 해 보시고, 계속 안 되면 ${CONFIG.contact}로 알려 주세요.`);
-    } finally {
-      pbtn.disabled = false;
-    }
-  });
-}
+// 그로블 '결제 후 이동 페이지'로 돌아온 경우 (?paid=1): 결제하러 간 리포트가 결제됐는지 확인하고 연다
+if (new URLSearchParams(location.search).has('paid')) void afterPay();
 
-// 그로블 결제 후 링크(?code=)로 들어오면 버튼 안 눌러도 바로 열고 리포트로 보낸다
-const pre = new URLSearchParams(location.search).get('code');
-if (pre) {
-  input.value = pre;
-  f.requestSubmit();
+async function afterPay() {
+  const report = pendingReport();
+  if (!autoPay() || !report || !hasRef(report)) {
+    say(false, `결제는 그로블에 기록돼 있어요. 다만 이 브라우저에서 결제한 리포트를 못 찾았어요. 리포트를 만들었던 브라우저에서 리포트를 다시 열면 자동으로 열려요. 그래도 안 되면 ${CONFIG.contact}로 결제 내역 캡처를 보내 주세요.`);
+    return;
+  }
+  say(true, '결제 확인하는 중이에요.');
+  // 웹훅이 몇 초 늦게 올 수 있어서 20초 동안 다시 물어본다
+  for (let i = 0; i < 10; i++) {
+    const r = await checkPaid(report);
+    if (r === 'ok') { say(true, '결제 확인됐어요. 리포트로 갈게요.'); setTimeout(() => { location.href = `./report.html#${report}`; }, 600); return; }
+    if (r === 'nostore') { say(false, '결제는 확인됐는데 이 브라우저가 저장을 막고 있어요. 시크릿 창이면 일반 창에서 리포트를 다시 열어 주세요.'); return; }
+    await new Promise((res) => setTimeout(res, 2000));
+  }
+  say(false, `결제 확인이 늦어지고 있어요. 1~2분 뒤 리포트를 다시 열면 자동으로 열려요. 계속 안 되면 ${CONFIG.contact}로 결제 내역 캡처를 보내 주세요.`);
 }

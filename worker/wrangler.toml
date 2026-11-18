@@ -4,8 +4,6 @@ compatibility_date = "2026-10-01"
 
 [vars]
 ALLOWED_ORIGIN = "https://hubhub5.github.io"
-# 그로블 웹훅 본문에 이 글자가 있어야 결제로 인정 (상품 페이지 주소 끝 ID). 다른 상품 알림은 무시
-PRODUCT_KEY = "qhU2SP"
 
 # npx wrangler kv namespace create KV 로 만든 id 를 넣는다
 [[kv_namespaces]]

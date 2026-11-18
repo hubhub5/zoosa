@@ -77,5 +77,3 @@
 
 [data-sishi] b { color: var(--ink); font-weight: 700; }
 [data-sishi].edge { color: var(--accent-ink); }
-.paid-box > .mono { font-size: 13px; margin-top: 18px; }
-[data-paid-form] input { text-transform: none; letter-spacing: 0; font-size: 16px; }

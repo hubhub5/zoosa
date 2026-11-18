@@ -3,7 +3,7 @@ import { initCommon } from '../common';
 import { decodeInputs, buildModel, type Model } from '../report/model';
 import { renderReport, esc, josa, breedLabel, spriteKey, verdictOf, setVerdictOverride } from '../report/render';
 import { wireCharts } from '../charts/charts';
-import { isUnlocked, rememberReport } from '../unlock';
+import { isUnlocked, rememberReport, isPaidReport, buyUrl, markPending, autoPay, hasRef, checkPaid } from '../unlock';
 import { pillarHanja, STEMS, BRANCHES, EL_HANJA, EL_KO } from '../saju/constants';
 import { ADOPT, ROUTE_KO } from '../content/adoption';
 import { DIST } from '../content/distortions';
@@ -27,7 +27,7 @@ if (!inp) {
 } else {
   if (!SAMPLE && !FIXED) rememberReport(hash);
   const m = buildModel(inp);
-  const unlocked = SAMPLE || !!FIXED || isUnlocked();
+  const unlocked = SAMPLE || !!FIXED || isUnlocked() || isPaidReport(hash);
   const { head, body, toc } = renderReport(m, unlocked);
   const bar = SAMPLE ? `<div class="sample-bar"><div><b>예시 리포트</b><span>결제하면 이렇게 끝까지 다 나와요. 아래는 김예빈님과 김율 예시예요.</span></div><a class="btn" href="./#form">내 걸로 보기</a></div>` : '';
   root.innerHTML = bar + head + body + `<div class="disclaimer"><p>계산: 만세력(진태양시 −${m.chart.correctionMin}분 보정${m.chart.corrected ? '' : ', 시각 미상'}), 대운수 ${m.chart.daeunStartAge}. 생각 버릇 점수는 내 사주 비중을 무작위 생년월일 2만 개랑 비교해서 몇 등쯤인지 본 거예요.</p><p>재미로, 나를 좀 더 알아보는 용도로 봐 주세요. 심리 진단은 아니에요.</p></div>`;
@@ -51,9 +51,25 @@ if (!inp) {
     document.getElementById(a.getAttribute('href')!.slice(1))?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }));
 
+  if (!unlocked && !SAMPLE && !FIXED) wireBuy();
   wireCharts(root);
   wireChecks(m);
   wireShare(m, unlocked);
+}
+
+/** 결제 버튼에 이 리포트 전용 참조값을 붙이고, 이미 결제했는데 안 열린 상태면(새 탭에서 결제 등) 조용히 확인해서 연다 */
+function wireBuy() {
+  const a = root.querySelector<HTMLAnchorElement>('[data-buy]');
+  if (a) {
+    a.href = buyUrl(hash);
+    if (autoPay()) { a.removeAttribute('target'); a.addEventListener('click', () => markPending(hash)); }
+  }
+  if (autoPay() && hasRef(hash)) {
+    const recheck = () => { void checkPaid(hash).then((r) => { if (r === 'ok') location.reload(); }); };
+    recheck();
+    // 다른 탭에서 결제하고 이 탭으로 돌아온 경우
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') recheck(); });
+  }
 }
 
 function wireChecks(m: Model) {

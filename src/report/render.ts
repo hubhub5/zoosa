@@ -8,6 +8,7 @@ import { ADOPT, ROUTE_KO } from '../content/adoption';
 import { STEM_TEXT, TG_TEXT, GROUP_THEME, EL_TEXT } from '../content/saju';
 import { elementBars, pairedBars, timelineChart, distBars, gauge, spark, elVar } from '../charts/charts';
 import { CONFIG } from '../config';
+import { autoPay } from '../unlock';
 import { base } from '../paths';
 import { VERDICT, VERDICT_EL, VERDICT_META } from '../content/verdict';
 import { spriteFor } from '../content/breeds';
@@ -228,11 +229,11 @@ export function renderReport(m: Model, unlocked: boolean): { head: string; body:
         <div class="ghost-bars">${Array.from({ length: 10 }, (_, i) => `<i style="width:${88 - i * 7}%"></i>`).join('')}</div>
       </div>
       <div class="buy">
-        <a class="btn" href="${CONFIG.grobleUrl}" target="_blank" rel="noopener">나머지 다 보기 · ${CONFIG.priceLabel}</a>
+        <a class="btn" data-buy href="${CONFIG.grobleUrl}" target="_blank" rel="noopener">나머지 다 보기 · ${CONFIG.priceLabel}</a>
         <a class="btn ghost" href="${base}unlock.html">코드 있어요</a>
         <a class="wl lock-sample" href="${base}sample.html">결제하면 어떻게 나오는지 예시 먼저 볼래요</a>
       </div>
-      <p class="mono mute fine">그로블에서 결제하면 코드가 바로 와요. 한 번 넣으면 이 브라우저에선 계속 열려 있고, 입력한 정보는 어디에도 저장 안 돼요.</p>
+      <p class="mono mute fine">${autoPay() ? '그로블에서 결제하면 이 리포트로 돌아와서 바로 열려요. 코드 넣을 필요 없어요. 입력한 정보는 어디에도 저장 안 돼요.' : '그로블에서 결제하면 코드가 바로 와요. 한 번 넣으면 이 브라우저에선 계속 열려 있고, 입력한 정보는 어디에도 저장 안 돼요.'}</p>
     </section>`;
   } else {
     body += renderPaid(m);
