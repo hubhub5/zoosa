@@ -21,9 +21,6 @@ if (isUnlocked()) {
   msg.querySelector('[data-go]')!.addEventListener('click', (e) => { e.preventDefault(); goReport(); });
 }
 
-// 그로블 전달 링크에 ?code= 를 붙여 두면 자동 입력
-const pre = new URLSearchParams(location.search).get('code');
-if (pre) input.value = pre;
 
 f.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -45,3 +42,10 @@ f.addEventListener('submit', async (e) => {
     input.select();
   }
 });
+
+// 그로블 결제 후 링크(?code=)로 들어오면 버튼 안 눌러도 바로 열고 리포트로 보낸다
+const pre = new URLSearchParams(location.search).get('code');
+if (pre) {
+  input.value = pre;
+  f.requestSubmit();
+}
