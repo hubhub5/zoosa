@@ -68,3 +68,14 @@ OG 이미지(`public/og.png`)는 글꼴이 들어가서 브라우저에서 만�
 2. `node pixel/sheet.mjs` → `pixel/preview/breeds.png`에서 전 조합 확인
 3. `npm run pixel` (GIF 다시 만들기)
 4. `src/content/breeds.ts`는 `pixel/breeds.mjs`의 이름 목록과 같게 맞춘다 (견종 id, 털색 id, 이름)
+
+## 결제 확인 서버 (그로블 웹훅)
+
+`worker/` 는 Cloudflare Workers 에 올리는 작은 서버다. 그로블이 결제 알림(웹훅)을 보내면 구매자 이메일·전화번호의 해시를 저장하고, 코드 넣기 페이지의 "결제했어요" 칸이 그걸 물어봐서 열어 준다.
+
+1. `npx wrangler login` 후 `bash worker/setup.sh <PAID_CODE 파일> <HOOK_SECRET 파일>`
+2. 나온 workers.dev 주소를 `src/config.ts` 의 `paidApi` 에 넣고 배포
+3. 그로블 웹훅 주소: `<workers.dev 주소>/hook/<HOOK_SECRET>`
+4. 테스트 결제 뒤 `<workers.dev 주소>/shapes/<HOOK_SECRET>` 에서 웹훅 모양 확인 (개인정보는 가려져 있음)
+
+PAID_CODE 의 해시는 `CONFIG.unlockHashes` 에 들어 있고, 원문은 서버 비밀값에만 있다.

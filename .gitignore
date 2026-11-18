@@ -2,3 +2,5 @@ node_modules
 dist
 .DS_Store
 pixel/preview
+worker/node_modules
+worker/.wrangler
