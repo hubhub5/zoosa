@@ -8,4 +8,4 @@ ALLOWED_ORIGIN = "https://hubhub5.github.io"
 # npx wrangler kv namespace create KV 로 만든 id 를 넣는다
 [[kv_namespaces]]
 binding = "KV"
-id = "REPLACE_ME"
+id = "3bc9f93df855428492db0b696cd19087"

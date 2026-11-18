@@ -1,7 +1,7 @@
 // 판매 설정. 여기만 바꾸면 된다.
 export const CONFIG = {
   /** 그로블 상품 페이지 주소  */
-  grobleUrl: 'https://www.groble.im/products/qhU2SP',
+  grobleUrl: 'https://www.groble.im/payment/g4wFTv',
   price: 9900,
   priceLabel: '9,900원',
   /**
@@ -28,6 +28,6 @@ export const CONFIG = {
    * paidApi: 결제 확인 서버 주소 (worker/ 배포 후 나온 workers.dev 주소)
    * 그로블 '결제 후 이동 페이지'에는 https://hubhub5.github.io/zoosa/unlock.html?paid=1 을 넣는다
    */
-  groblePayUrl: '',
-  paidApi: '',
+  groblePayUrl: 'https://www.groble.im/payment/g4wFTv',
+  paidApi: 'https://zoosa-paid.study-4ever.workers.dev',
 };
